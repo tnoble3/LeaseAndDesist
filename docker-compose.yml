@@ -1,11 +1,16 @@
 services:
-  mongo:
-    image: mongo:6.0
-    container_name: mongodb
+  postgres:
+    image: postgres:16
+    container_name: leaseanddesist-postgres
+    restart: unless-stopped
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=leaseanddesist
     ports:
-      - "27017:27017"
+      - "5432:5432"
     volumes:
-      - mongo-data:/data/db
+      - pg-data:/var/lib/postgresql/data
 
   server:
     build: ./server
@@ -13,9 +18,14 @@ services:
     ports:
       - "5002:5000"
     environment:
-      - MONGO_URI=mongodb://mongo:27017/authdb
+      - DATABASE_URL=postgresql://postgres:postgres@postgres:5432/leaseanddesist?schema=public
+      - CLIENT_ORIGIN=http://localhost:3000
+      - JWT_SECRET=super-secret-key
+      - JWT_EXPIRES_IN=15m
+      - REFRESH_TOKEN_EXPIRES_IN_DAYS=7
+      - ACCESS_TOKEN_EXPIRES_IN=15m
     depends_on:
-      - mongo
+      - postgres
     volumes:
       - ./server:/app
       - server-node-modules:/app/node_modules
@@ -29,6 +39,8 @@ services:
       - sh
       - -c
       - npm install && npm start
+    environment:
+      - VITE_API_BASE_URL=http://localhost:5002
     stdin_open: true
     tty: true
     depends_on:
@@ -38,6 +50,6 @@ services:
       - client-node-modules:/app/node_modules
 
 volumes:
-  mongo-data:
+  pg-data:
   server-node-modules:
   client-node-modules:
