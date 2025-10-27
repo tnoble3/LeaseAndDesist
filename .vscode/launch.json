@@ -1,0 +1,29 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Run Client (npm dev)",
+      "type": "node",
+      "request": "launch",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["run", "dev"],
+      "cwd": "${workspaceFolder}/client",
+      "console": "integratedTerminal",
+      "internalConsoleOptions": "neverOpen"
+    },
+    {
+      "name": "Open Login in Browser",
+      "type": "pwa-chrome",
+      "request": "launch",
+      "url": "http://localhost:5173/login",
+      "webRoot": "${workspaceFolder}/client",
+      "preLaunchTask": ""
+    }
+  ],
+  "compounds": [
+    {
+      "name": "Client + Open Browser",
+      "configurations": ["Run Client (npm dev)", "Open Login in Browser"]
+    }
+  ]
+}
