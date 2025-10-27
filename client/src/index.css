@@ -1,8 +1,8 @@
 :root {
-  font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  font-family:  'Montserrat', sans-serif;
   line-height: 1.5;
   font-weight: 400;
-  color: #111827;
+  color: #160fa0;
   background-color: #f3f4f6;
   font-synthesis: none;
   text-rendering: optimizeLegibility;
@@ -22,7 +22,7 @@ body {
 
 a {
   font-weight: 500;
-  color: #2563eb;
+  color: #868b97;
   text-decoration: none;
 }
 a:hover {
@@ -36,8 +36,8 @@ button {
   font-size: 1em;
   font-weight: 600;
   font-family: inherit;
-  background-color: #2563eb;
-  color: #fff;
+  background-color: #F868E9;
+  color: #bce2f8;
   cursor: pointer;
   transition: opacity 0.2s ease, transform 0.2s ease;
 }
@@ -61,23 +61,43 @@ button:disabled {
 }
 
 .app-header {
-  background-color: #1f2937;
+  font-family:  'Oswald', sans-serif;
+  font-weight: 700;
+  background-color: #B6E47C;
   color: #f9fafb;
   padding: 1rem 1.5rem;
 }
 
 .nav {
   display: flex;
-  gap: 1rem;
   align-items: center;
+  justify-content: space-between;
+  gap: 1.5rem;
 }
 
 .nav a {
-  color: #f9fafb;
+  color: #1926b9;
   font-weight: 500;
 }
 .nav a:hover {
-  color: #bfdbfe;
+  color: #8461f6;
+}
+
+.nav-logo img {
+  width: 48px;
+  height: 48px;
+  object-fit: contain;
+  border-radius: 12px;
+}
+
+.nav-links {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.nav-link {
+  font-weight: 700;
 }
 
 .link-button {
@@ -85,11 +105,11 @@ button:disabled {
   border: none;
   padding: 0;
   font: inherit;
-  color: #f9fafb;
+  color: #360c85;
   cursor: pointer;
 }
 .link-button:hover {
-  color: #fbbf24;
+  color: #ad1ead;
 }
 
 .app-main {
@@ -103,10 +123,22 @@ button:disabled {
 .page {
   width: 100%;
   max-width: 420px;
-  background: #fff;
+  background: #EBEBEB;
   padding: 2rem;
   border-radius: 16px;
   box-shadow: 0 10px 35px rgba(15, 23, 42, 0.12);
+}
+
+.home-page {
+  text-align: center;
+}
+
+.home-logo {
+  width: 160px;
+  height: 160px;
+  object-fit: contain;
+  margin: 0 auto 1rem;
+  display: block;
 }
 
 .dashboard-page {
@@ -143,8 +175,8 @@ button:disabled {
   justify-content: center;
   padding: 0.6em 1em;
   border-radius: 8px;
-  border: 1px solid #2563eb;
-  color: #2563eb;
+  border: 1px solid #FC4C00;
+  color: #fbac35;
   font-weight: 600;
   transition: background-color 0.2s ease, color 0.2s ease;
 }
@@ -186,6 +218,13 @@ input:focus {
   box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.2);
 }
 
+.field-error {
+  display: block;
+  margin-top: 0.25rem;
+  font-size: 0.875rem;
+  color: #dc2626;
+}
+
 .error {
   color: #dc2626;
   background: #fee2e2;
@@ -200,13 +239,19 @@ input:focus {
     padding: 1.5rem;
   }
 
+  .nav {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
+  }
+
+  .nav-links {
+    flex-wrap: wrap;
+    gap: 0.75rem;
+  }
+
   .dashboard-header {
     flex-direction: column;
     align-items: flex-start;
-  }
-
-  .nav {
-    flex-wrap: wrap;
-    gap: 0.75rem;
   }
 }

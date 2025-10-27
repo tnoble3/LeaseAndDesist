@@ -5,6 +5,7 @@ import Signup from './signup.jsx';
 import Login from './login.jsx';
 import Dashboard from './pages/Dashboard.jsx';
 import apiClient from './api/client.js';
+import logo from './assets/leaseanddesistlogo.png';
 
 const STORAGE_KEY = 'leaseanddesist_user';
 
@@ -92,21 +93,26 @@ function App() {
       <div className="app-shell">
         <header className="app-header">
           <nav className="nav">
-            <Link to="/">Home</Link>
-            {!isAuthenticated && (
-              <>
-                <Link to="/login">Log In</Link>
-                <Link to="/signup">Sign Up</Link>
-              </>
-            )}
-            {isAuthenticated && (
-              <>
-                <Link to="/dashboard">Dashboard</Link>
-                <button type="button" className="link-button" onClick={handleLogout}>
-                  Log Out
-                </button>
-              </>
-            )}
+            <Link to="/" className="nav-logo" aria-label="Lease and Desist home">
+              <img src={logo} alt="Lease and Desist logo" />
+            </Link>
+            <div className="nav-links">
+              <Link to="/" className="nav-link">Home</Link>
+              {!isAuthenticated && (
+                <>
+                  <Link to="/login" className="nav-link">Login</Link>
+                  <Link to="/signup" className="nav-link">Sign Up</Link>
+                </>
+              )}
+              {isAuthenticated && (
+                <>
+                  <Link to="/dashboard" className="nav-link">Dashboard</Link>
+                  <button type="button" className="link-button" onClick={handleLogout}>
+                    Log Out
+                  </button>
+                </>
+              )}
+            </div>
           </nav>
         </header>
 

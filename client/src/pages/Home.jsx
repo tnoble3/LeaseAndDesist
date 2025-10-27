@@ -1,9 +1,12 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
+import { Link } from 'react-router-dom';
 import apiClient from '../api/client.js';
+import logo from '../assets/leaseanddesistlogo.png';
 
 function Home({ auth }) {
   const [message, setMessage] = useState('Loading...');
   const [error, setError] = useState('');
+  const isAuthenticated = useMemo(() => Boolean(auth?.user), [auth]);
 
   useEffect(() => {
     let isMounted = true;
@@ -31,9 +34,17 @@ function Home({ auth }) {
   }, []);
 
   return (
-    <div className="page">
+    <div className="page home-page">
+      <img src={logo} alt="Lease and Desist logo" className="home-logo" />
       <h1>Lease &amp; Desist</h1>
-      {auth?.user ? <p>Signed in as <strong>{auth.user.email}</strong></p> : <p>You are browsing as a guest.</p>}
+      {isAuthenticated ? (
+        <>
+          <p>Signed in as <strong>{auth.user.email}</strong></p>
+          <Link to="/dashboard" className="secondary-button">Go to dashboard</Link>
+        </>
+      ) : (
+        <p>You are browsing as a guest.</p>
+      )}
       {error ? <p className="error">{error}</p> : <p>{message}</p>}
     </div>
   );

@@ -53,7 +53,7 @@ function Login({ onAuthSuccess }) {
             {...register('email')}
             autoComplete="email"
           />
-          {errors.email && <span className="error">{errors.email.message}</span>}
+          {errors.email && <span className="field-error">{errors.email.message}</span>}
         </label>
 
         <label>
@@ -63,7 +63,7 @@ function Login({ onAuthSuccess }) {
             {...register('password')}
             autoComplete="current-password"
           />
-          {errors.password && <span className="error">{errors.password.message}</span>}
+          {errors.password && <span className="field-error">{errors.password.message}</span>}
         </label>
 
         {serverError && <p className="error">{serverError}</p>}
