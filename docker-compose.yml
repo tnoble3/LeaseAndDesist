@@ -1,0 +1,22 @@
+version: "3.8"
+services:
+  mongo:
+    image: mongo
+    container_name: leaseanddesist-mongo
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo_data:/data/db
+
+  backend:
+    build: ./backend
+    container_name: leaseanddesist-backend
+    ports:
+      - "5000:5000"
+    env_file:
+      - .env
+    depends_on:
+      - mongo
+
+volumes:
+  mongo_data:
