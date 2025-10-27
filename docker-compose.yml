@@ -1,0 +1,43 @@
+services:
+  mongo:
+    image: mongo:6.0
+    container_name: mongodb
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo-data:/data/db
+
+  server:
+    build: ./server
+    container_name: express-server
+    ports:
+      - "5002:5000"
+    environment:
+      - MONGO_URI=mongodb://mongo:27017/authdb
+    depends_on:
+      - mongo
+    volumes:
+      - ./server:/app
+      - server-node-modules:/app/node_modules
+
+  client:
+    build: ./client
+    container_name: react-client
+    ports:
+      - "3000:3000"
+    command:
+      - sh
+      - -c
+      - npm install && npm start
+    stdin_open: true
+    tty: true
+    depends_on:
+      - server
+    volumes:
+      - ./client:/app
+      - client-node-modules:/app/node_modules
+
+volumes:
+  mongo-data:
+  server-node-modules:
+  client-node-modules:
