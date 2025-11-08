@@ -18,5 +18,16 @@ services:
     depends_on:
       - mongo
 
+  frontend:
+    build:
+      context: ./Frontend
+      args:
+        VITE_API_BASE: "http://backend:5000"
+    container_name: leaseanddesist-frontend
+    ports:
+      - "5173:80"
+    depends_on:
+      - backend
+
 volumes:
   mongo_data:

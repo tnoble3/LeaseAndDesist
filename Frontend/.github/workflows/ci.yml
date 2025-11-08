@@ -1,0 +1,82 @@
+name: CI
+
+on:
+  pull_request:
+    branches: [ main ]
+  push:
+    branches: [ main ]
+
+jobs:
+  backend-tests:
+    runs-on: ubuntu-latest
+    
+    services:
+      mongodb:
+        image: mongo:4.4
+        ports:
+          - 27017:27017
+
+    steps:
+    - uses: actions/checkout@v3
+    - name: Use Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: '18.x'
+        cache: 'npm'
+        cache-dependency-path: Backend/package.json
+    
+    - name: Install backend dependencies
+      working-directory: Backend
+      run: npm ci
+    
+    - name: Run backend tests
+      working-directory: Backend
+      env:
+        MONGO_URI: mongodb://localhost:27017/test
+        JWT_SECRET: test_secret
+      run: npm test
+
+  e2e-tests:
+    runs-on: ubuntu-latest
+    
+    services:
+      mongodb:
+        image: mongo:4.4
+        ports:
+          - 27017:27017
+
+    steps:
+    - uses: actions/checkout@v3
+    - name: Use Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: '18.x'
+        cache: 'npm'
+        cache-dependency-path: |
+          Backend/package.json
+          Frontend/package.json
+    
+    - name: Install backend dependencies
+      working-directory: Backend
+      run: npm ci
+    
+    - name: Install frontend dependencies
+      working-directory: Frontend
+      run: npm ci
+    
+    - name: Start backend
+      working-directory: Backend
+      env:
+        MONGO_URI: mongodb://localhost:27017/test
+        JWT_SECRET: test_secret
+      run: npm run dev &
+    
+    - name: Start frontend
+      working-directory: Frontend
+      env:
+        VITE_API_BASE: http://localhost:5000
+      run: npm run dev &
+    
+    - name: Run Cypress tests
+      working-directory: Frontend
+      run: npx cypress run

@@ -1,0 +1,9 @@
+:root{--accent:#0b5cff}
+body{font-family:system-ui,Segoe UI,Roboto,Arial;margin:0;color:#111}
+.top-nav{display:flex;gap:12px;padding:12px;background:#f6f7fb;border-bottom:1px solid #e6e7ee}
+main{padding:20px}
+.card{border:1px solid #e1e4ea;padding:12px;border-radius:8px;background:#fff}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:12px}
+.form-row{display:flex;flex-direction:column;gap:6px;margin-bottom:10px}
+button{background:var(--accent);color:#fff;border:none;padding:8px 12px;border-radius:6px;cursor:pointer}
+input,textarea,select{padding:8px;border:1px solid #d8dbe3;border-radius:6px}
