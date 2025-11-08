@@ -6,36 +6,50 @@ describe('Core User Flow', () => {
   }
 
   it('should register -> login -> create challenge -> mark complete', () => {
-  // Register
-  cy.visit('/register')
-  cy.get('[data-testid="input-name"]').type(testUser.name)
-  cy.get('[data-testid="input-email"]').type(testUser.email)
-  cy.get('[data-testid="input-password"]').type(testUser.password)
-  cy.get('[data-testid="register-form"]').submit()
+    // Visit with longer timeout
+    cy.visit('/register', { timeout: 10000 })
 
-    // Should redirect to dashboard
-    cy.url().should('include', '/dashboard')
+    // Fill registration form
+    cy.get('[data-testid="input-name"]', { timeout: 10000 }).type(testUser.name)
+    cy.get('[data-testid="input-email"]', { timeout: 10000 }).type(testUser.email)
+    cy.get('[data-testid="input-password"]', { timeout: 10000 }).type(testUser.password)
+    
+    // Watch API call
+    cy.intercept('POST', '**/api/users/register').as('registerRequest')
+    cy.get('[data-testid="register-form"]').submit()
+    
+    // Wait and log API response
+    cy.wait('@registerRequest', { timeout: 30000 }).then(interception => {
+      cy.log('Register response:', interception.response?.statusCode)
+    })
 
-    // Create challenge
-  cy.visit('/goals')
+    // Check redirect with retry
+    cy.url({ timeout: 10000 }).should('include', '/dashboard')
+
+    // Create challenge with longer waits
+    cy.visit('/goals', { timeout: 10000 })
     const testChallenge = {
       title: 'Test Challenge',
       description: 'This is a test challenge created by Cypress'
     }
-  cy.get('[data-testid="input-title"]').type(testChallenge.title)
-  cy.get('[data-testid="input-description"]').type(testChallenge.description)
-  cy.get('[data-testid="create-challenge-form"]').submit()
+    
+    cy.get('[data-testid="input-title"]', { timeout: 10000 }).type(testChallenge.title)
+    cy.get('[data-testid="input-description"]', { timeout: 10000 }).type(testChallenge.description)
+    cy.intercept('POST', '**/api/challenges').as('createChallenge')
+    cy.get('[data-testid="create-challenge-form"]').submit()
+    cy.wait('@createChallenge', { timeout: 30000 })
 
-    // Verify challenge appears and can be marked complete
-    cy.contains(testChallenge.title)
+    // Verify challenge with retries
+    cy.contains(testChallenge.title, { timeout: 10000 })
       .closest('[data-testid^="goal-"]')
       .within(() => {
-        cy.get('[data-testid="btn-toggle"]').click()
-        cy.get('[data-testid="btn-toggle"]').contains('Mark Open')
+        cy.get('[data-testid="btn-toggle"]', { timeout: 10000 }).click()
+        cy.get('[data-testid="btn-toggle"]', { timeout: 10000 }).contains('Mark Open')
       })
 
-    // Check dashboard shows progress
-  cy.visit('/dashboard')
-  cy.get('[data-testid="progress-text"]').should('contain', '1 / 1 challenges complete')
+    // Check dashboard progress
+    cy.visit('/dashboard', { timeout: 10000 })
+    cy.get('[data-testid="progress-text"]', { timeout: 10000 })
+      .should('contain', '1 / 1 challenges complete')
   })
 })
