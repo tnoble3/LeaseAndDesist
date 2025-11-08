@@ -6,7 +6,7 @@ describe('Core User Flow', () => {
   }
 
   it('should register -> login -> create challenge -> mark complete', () => {
-    // Visit with longer timeout
+    // Visit registration page
     cy.visit('/register', { timeout: 10000 })
 
     // Fill registration form
@@ -14,19 +14,28 @@ describe('Core User Flow', () => {
     cy.get('[data-testid="input-email"]', { timeout: 10000 }).type(testUser.email)
     cy.get('[data-testid="input-password"]', { timeout: 10000 }).type(testUser.password)
     
-    // Watch API call
+    // Intercept registration API
     cy.intercept('POST', '**/api/users/register').as('registerRequest')
     cy.get('[data-testid="register-form"]').submit()
-    
-    // Wait and log API response
+
+    // Wait and log API response for debugging
     cy.wait('@registerRequest', { timeout: 30000 }).then(interception => {
-      cy.log('Register response:', interception.response?.statusCode)
+      cy.log('Register status:', interception.response?.statusCode)
+      cy.log('Register body:', JSON.stringify(interception.response?.body))
     })
 
-    // Check redirect with retry
+    // After registration, the app may redirect to /login (not auto-login)
+    cy.url({ timeout: 10000 }).should('include', '/login')
+
+    // Log in manually
+    cy.get('[data-testid="input-email"]').type(testUser.email)
+    cy.get('[data-testid="input-password"]').type(testUser.password)
+    cy.get('[data-testid="login-form"]').submit()
+
+    // Verify we reached dashboard
     cy.url({ timeout: 10000 }).should('include', '/dashboard')
 
-    // Create challenge with longer waits
+    // Create challenge
     cy.visit('/goals', { timeout: 10000 })
     const testChallenge = {
       title: 'Test Challenge',
@@ -39,7 +48,7 @@ describe('Core User Flow', () => {
     cy.get('[data-testid="create-challenge-form"]').submit()
     cy.wait('@createChallenge', { timeout: 30000 })
 
-    // Verify challenge with retries
+    // Mark challenge complete
     cy.contains(testChallenge.title, { timeout: 10000 })
       .closest('[data-testid^="goal-"]')
       .within(() => {
