@@ -18,21 +18,21 @@ describe('Core User Flow', () => {
     cy.intercept('POST', '**/api/users/register').as('registerRequest')
     cy.get('[data-testid="register-form"]').submit()
 
-    // Wait and log API response for debugging
+    // Wait and log API response
     cy.wait('@registerRequest', { timeout: 30000 }).then(interception => {
       cy.log('Register status:', interception.response?.statusCode)
       cy.log('Register body:', JSON.stringify(interception.response?.body))
     })
 
-    // After registration, the app may redirect to /login (not auto-login)
+    // Registration likely redirects to /login
     cy.url({ timeout: 10000 }).should('include', '/login')
 
-    // Log in manually
+    // Log in explicitly
     cy.get('[data-testid="input-email"]').type(testUser.email)
     cy.get('[data-testid="input-password"]').type(testUser.password)
     cy.get('[data-testid="login-form"]').submit()
 
-    // Verify we reached dashboard
+    // Verify dashboard
     cy.url({ timeout: 10000 }).should('include', '/dashboard')
 
     // Create challenge

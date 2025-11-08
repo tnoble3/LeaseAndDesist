@@ -38,7 +38,7 @@ export default function Register(){
           <input data-testid="input-password" type="password" value={password} onChange={e=>setPassword(e.target.value)} />
         </div>
         {error && <div style={{color:'red'}}>{error}</div>}
-        <button type="submit">Register</button>
+        <button type="submit" data-testid="btn-register">Register</button>
       </form>
     </div>
   )

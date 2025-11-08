@@ -33,7 +33,7 @@ export default function Login(){
           <input data-testid="input-password" type="password" value={password} onChange={e=>setPassword(e.target.value)} />
         </div>
         {error && <div style={{color:'red'}}>{error}</div>}
-        <button type="submit">Login</button>
+        <button type="submit" data-testid="btn-login">Login</button>
       </form>
     </div>
   )

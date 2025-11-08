@@ -52,7 +52,7 @@ export default function Goals(){
           <label>Target Date</label>
           <input data-testid="input-target" type="date" value={targetDate} onChange={e=>setTargetDate(e.target.value)} />
         </div>
-        <button type="submit">Create Challenge</button>
+        <button type="submit" data-testid="btn-create-challenge">Create Challenge</button>
       </form>
 
       <div style={{marginTop:16}} className="grid">
