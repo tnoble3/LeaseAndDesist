@@ -1,0 +1,38 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        Int      @id @default(autoincrement())
+  name      String
+  email     String   @unique
+  // We are continuing to use MongoDB users for auth — if you want a single DB, you'll need to migrate users. 
+  goals     Goal[]
+  createdAt DateTime @default(now())
+}
+
+model Goal {
+  id          Int        @id @default(autoincrement())
+  title       String
+  description String?
+  targetDate  DateTime?
+  userId      Int
+  user        User       @relation(fields: [userId], references: [id])
+  challenges  Challenge[]
+  createdAt   DateTime   @default(now())
+}
+
+model Challenge {
+  id          Int      @id @default(autoincrement())
+  title       String
+  description String?
+  isComplete  Boolean  @default(false)
+  goalId      Int
+  goal        Goal     @relation(fields: [goalId], references: [id])
+  createdAt   DateTime @default(now())
+}

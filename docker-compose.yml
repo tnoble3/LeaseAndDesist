@@ -1,22 +1,16 @@
-version: "3.8"
+version: '3.8'
 services:
-  mongo:
-    image: mongo
-    container_name: leaseanddesist-mongo
+  postgres:
+    image: postgres:15
+    restart: always
+    environment:
+      POSTGRES_USER: clarcomb
+      POSTGRES_PASSWORD: clarcomb1234
+      POSTGRES_DB: appdb
     ports:
-      - "27017:27017"
+      - "5432:5432"
     volumes:
-      - mongo_data:/data/db
-
-  backend:
-    build: ./backend
-    container_name: leaseanddesist-backend
-    ports:
-      - "5000:5000"
-    env_file:
-      - .env
-    depends_on:
-      - mongo
+      - pgdata:/var/lib/postgresql/data
 
 volumes:
-  mongo_data:
+  pgdata:
