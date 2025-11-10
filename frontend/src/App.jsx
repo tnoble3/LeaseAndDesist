@@ -368,14 +368,20 @@ const App = () => {
   );
 
   return (
-    <div className="app-frame">
-      <Aurora
-        className="aurora-background"
-        colorStops={["#3A29FF", "#FF94B4", "#FF3232"]}
-        blend={0.5}
-        amplitude={1.0}
-        speed={0.5}
-      />
+    <div
+      className={`app-frame ${
+        hasToken ? "app-frame--dashboard" : "app-frame--auth"
+      }`}
+    >
+      {hasToken && (
+        <Aurora
+          className="aurora-background"
+          colorStops={["#B6E47C", "#F868E9", "#1F48FF"]}
+          blend={0.5}
+          amplitude={1.0}
+          speed={0.5}
+        />
+      )}
       <div className="app-frame__content">
         {hasToken ? authenticatedView : unauthenticatedView}
       </div>
