@@ -1,3 +1,5 @@
+import { formatGoalStatus } from "../utils/statusLabels.js";
+
 const GoalList = ({ goals = [], loading, error, selectedGoalId, onSelect }) => {
   if (loading) {
     return (
@@ -34,7 +36,9 @@ const GoalList = ({ goals = [], loading, error, selectedGoalId, onSelect }) => {
           >
             <header>
               <h3>{goal.title}</h3>
-              <span className={`status ${goal.status}`}>{goal.status}</span>
+              <span className={`status ${goal.status}`}>
+                {formatGoalStatus(goal.status)}
+              </span>
             </header>
             {goal.description && <p className="muted">{goal.description}</p>}
             <button type="button" className="ghost" onClick={() => onSelect(goal._id)}>

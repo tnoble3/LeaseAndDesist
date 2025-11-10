@@ -1,3 +1,5 @@
+import leaseAndDesistLogo from "../assets/leaseanddesistlogo.png";
+
 const NavBar = ({ user, activeView, onNavigate, onLogout }) => {
   const displayName = user
     ? [user.firstName, user.lastName].filter(Boolean).join(" ").trim() ||
@@ -14,8 +16,12 @@ const NavBar = ({ user, activeView, onNavigate, onLogout }) => {
   return (
     <nav className="nav-bar">
       <div className="nav-brand">
-        <span className="dot" />
-        <strong>Learning Launchpad</strong>
+        <img
+          src={leaseAndDesistLogo}
+          alt="Lease and Desist logo"
+          className="nav-brand__logo"
+        />
+        <strong>Lease And Desist</strong>
       </div>
       <div className="nav-links">
         {links.map((link) => (

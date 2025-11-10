@@ -1,3 +1,5 @@
+import { formatChallengeStatus } from "../utils/statusLabels.js";
+
 const ChallengeList = ({
   challenges = [],
   loading,
@@ -35,7 +37,9 @@ const ChallengeList = ({
         <article className="card challenge-card" key={challenge._id}>
           <header>
             <h3>{challenge.title}</h3>
-            <span className={`status ${challenge.status}`}>{challenge.status}</span>
+            <span className={`status ${challenge.status}`}>
+              {formatChallengeStatus(challenge.status)}
+            </span>
           </header>
           {challenge.description && <p>{challenge.description}</p>}
           <div className="challenge-actions">
@@ -44,7 +48,7 @@ const ChallengeList = ({
               className="ghost"
               onClick={() => onStatusChange(challenge, "in_progress")}
             >
-              In progress
+              In Progress
             </button>
             <button
               type="button"

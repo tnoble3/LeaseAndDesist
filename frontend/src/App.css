@@ -32,7 +32,7 @@ a {
 }
 
 .app-frame--dashboard {
-  background: #ebebeb;
+  background: #c3d4e4bc;
   color: #0f172a;
 }
 
@@ -59,14 +59,7 @@ a {
   border-bottom: 1px solid rgba(148, 163, 184, 0.25);
   border-radius: 0 0 1.5rem 1.5rem;
   box-shadow: 0 10px 35px rgba(15, 23, 42, 0.08);
-  background: linear-gradient(
-    120deg,
-    rgba(99, 102, 241, 0.18),
-    rgba(56, 189, 248, 0.15),
-    rgba(236, 72, 153, 0.15)
-  );
-  background-size: 220% 220%;
-  animation: navGlow 14s ease-in-out infinite;
+  background: #ebebeb;
 }
 
 .nav-brand {
@@ -75,6 +68,13 @@ a {
   align-items: center;
   font-weight: 700;
   font-size: 1.15rem;
+}
+
+.nav-brand__logo {
+  width: 36px;
+  height: 36px;
+  object-fit: contain;
+  border-radius: 0.75rem;
 }
 
 .nav-brand .dot {
@@ -108,7 +108,7 @@ a {
 }
 
 .nav-link.active {
-  background: linear-gradient(120deg, #f868e9, #7aeef1);
+  background: #B6E47C;
   color: #fff;
   transform: translateY(-1px);
   box-shadow: 0 14px 30px rgba(248, 104, 233, 0.35);

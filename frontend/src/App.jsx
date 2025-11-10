@@ -9,6 +9,10 @@ import ChallengeList from "./components/ChallengeList.jsx";
 import Aurora from "./components/Aurora.jsx";
 import leaseAndDesistLogo from "./assets/leaseanddesistlogo.png";
 import {
+  formatChallengeStatus,
+  formatGoalStatus,
+} from "./utils/statusLabels.js";
+import {
   fetchGoals,
   fetchChallenges,
   fetchGoalProgress,
@@ -257,11 +261,11 @@ const App = () => {
                   <p className="eyebrow">Welcome back</p>
                   <h1>
                     {displayName
-                      ? `${displayName}, let’s keep learning`
+                      ? `${displayName}`
                       : "Plan your next milestone"}
                   </h1>
                   <p className="muted">
-                    Track goals, tackle challenges, and visualize progress in one view.
+                  Interact with your community.
                   </p>
                 </div>
               </section>
@@ -279,7 +283,9 @@ const App = () => {
                           <strong>{goal.title}</strong>
                           {goal.description && <p>{goal.description}</p>}
                         </div>
-                        <span className={`status ${goal.status}`}>{goal.status}</span>
+                        <span className={`status ${goal.status}`}>
+                          {formatGoalStatus(goal.status)}
+                        </span>
                       </li>
                     ))}
                     {!goals.length && (
@@ -302,7 +308,7 @@ const App = () => {
                             {challenge.description && <p>{challenge.description}</p>}
                           </div>
                           <span className={`status ${challenge.status}`}>
-                            {challenge.status}
+                            {formatChallengeStatus(challenge.status)}
                           </span>
                         </li>
                       ))
