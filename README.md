@@ -15,14 +15,13 @@ The server now waits for a successful Mongo connection before it listens. When t
 
 ## Frontend Quickstart
 
-1. Copy `frontend/.env.example` to `frontend/.env` and update `VITE_API_BASE_URL` if your backend is not on `http://localhost:5000/api`. Optionally paste a JWT into `VITE_DEMO_JWT` to skip the token panel during local development.
-2. Install dependencies and start the Vite dev server:
+1. Copy `frontend/.env.example` to `frontend/.env` and update `VITE_API_BASE_URL` if your backend is not on `http://localhost:5000/api`. 
    ```bash
    cd frontend
    npm install
    npm run dev
    ```
-3. Visit `http://localhost:5173` and use the built-in authentication screen to create an account or log in (registration collects first/last name, username, email, and password + confirmation; sign-in uses your username + password). Once authenticated, you’ll land on the dashboard with navigation links to the Goals and Challenges sections, plus the live progress visualization.
+3. Visit `http://localhost:5173` and use the login page to create an account or log in (registration collects first/last name, username, email, and password + confirmation; sign-in uses your username + password). Once authenticated, you’ll land on the dashboard with navigation links to the Goals and Challenges sections, plus the live progress visualization.
 
 ## Testing & Tooling
 
