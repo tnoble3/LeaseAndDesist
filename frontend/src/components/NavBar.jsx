@@ -1,6 +1,6 @@
 import leaseAndDesistLogo from "../assets/leaseanddesistlogo.png";
 
-const NavBar = ({ user, activeView, onNavigate, onLogout }) => {
+const NavBar = ({ user, activeView, onNavigate, onLogout, onOpenAIChallenge, onOpenAIFeedback }) => {
   const displayName = user
     ? [user.firstName, user.lastName].filter(Boolean).join(" ").trim() ||
       user.username ||
@@ -36,6 +36,14 @@ const NavBar = ({ user, activeView, onNavigate, onLogout }) => {
         ))}
       </div>
       <div className="nav-user">
+        <div className="nav-ai-actions">
+          <button type="button" className="ghost" onClick={onOpenAIChallenge}>
+            Generate Challenge
+          </button>
+          <button type="button" className="ghost" onClick={onOpenAIFeedback}>
+            Get AI Feedback
+          </button>
+        </div>
         <span>{displayName}</span>
         <button type="button" className="ghost" onClick={onLogout}>
           Log out

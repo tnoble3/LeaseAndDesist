@@ -7,6 +7,19 @@ import GoalProgress from "./components/GoalProgress.jsx";
 import ChallengeForm from "./components/ChallengeForm.jsx";
 import ChallengeList from "./components/ChallengeList.jsx";
 import Aurora from "./components/Aurora.jsx";
+import AIGenerateChallengeModal from "./components/AIGenerateChallengeModal.jsx";
+import AIFeedbackSubmissionForm from "./components/AIFeedbackSubmissionForm.jsx";
+import * as Sentry from "@sentry/react";
+
+// Initialize Sentry for error tracking
+if (import.meta.env.VITE_SENTRY_DSN) {
+  Sentry.init({
+    dsn: import.meta.env.VITE_SENTRY_DSN,
+    environment: import.meta.env.MODE || "development",
+    tracesSampleRate: 1.0,
+  });
+}
+
 import leaseAndDesistLogo from "./assets/leaseanddesistlogo.png";
 import {
   formatChallengeStatus,
@@ -50,6 +63,8 @@ const App = () => {
   const [recentChallenges, setRecentChallenges] = useState([]);
 
   const [auraPosition, setAuraPosition] = useState({ x: 50, y: 50 });
+  const [isAIChallengeModalOpen, setIsAIChallengeModalOpen] = useState(false);
+  const [isAIFeedbackModalOpen, setIsAIFeedbackModalOpen] = useState(false);
 
   const hasToken = useMemo(() => {
     if (typeof window === "undefined") return false;
@@ -195,6 +210,16 @@ const App = () => {
     await loadRecentChallenges();
   };
 
+  const handleAIChallengeGenerated = async (challenge) => {
+    setIsAIChallengeModalOpen(false);
+    if (challenge) {
+      setRecentChallenges((prev) => [
+        { _id: `ai-${Date.now()}`, ...challenge, status: "todo" },
+        ...prev,
+      ].slice(0, 8));
+    }
+  };
+
   const handleChallengeStatus = async (challenge, status) => {
     if (status === "delete") {
       await deleteChallenge(challenge._id);
@@ -241,6 +266,8 @@ const App = () => {
         onLogout={handleLogout}
         activeView={activeView}
         onNavigate={setActiveView}
+        onOpenAIChallenge={() => setIsAIChallengeModalOpen(true)}
+        onOpenAIFeedback={() => setIsAIFeedbackModalOpen(true)}
       />
       <main className="app-shell">
         <div className="content">
@@ -390,6 +417,20 @@ const App = () => {
       )}
       <div className="app-frame__content">
         {hasToken ? authenticatedView : unauthenticatedView}
+        <AIGenerateChallengeModal
+          isOpen={isAIChallengeModalOpen}
+          onClose={() => setIsAIChallengeModalOpen(false)}
+          onChallengeGenerated={handleAIChallengeGenerated}
+        />
+
+        <AIFeedbackSubmissionForm
+          userId={currentUser?._id}
+          isOpen={isAIFeedbackModalOpen}
+          onClose={() => setIsAIFeedbackModalOpen(false)}
+          onFeedbackSubmitted={(id) => {
+            setIsAIFeedbackModalOpen(false);
+          }}
+        />
       </div>
     </div>
   );
