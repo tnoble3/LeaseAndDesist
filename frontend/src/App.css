@@ -306,6 +306,15 @@ a {
   box-shadow: 0 25px 40px rgba(15, 23, 42, 0.08);
 }
 
+/* make card content adapt better on mobile (modal/form friendly) */
+.card { max-width: 100%; word-wrap: break-word; }
+
+@media (max-width: 520px) {
+  .card { padding: 1rem; border-radius: 1rem; }
+  .goal-form textarea, .goal-form input { font-size: 0.95rem; }
+  .nav-bar { padding: 1rem; }
+}
+
 .form-card {
   display: flex;
   flex-direction: column;
