@@ -1,0 +1,81 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`AIPromptService Snapshot Tests should match snapshot for challenge prompt 1`] = `
+"Create a coding challenge with the following specifications:
+- Difficulty Level: medium
+- Topic: recursion
+- Programming Language: JavaScript
+
+Please provide:
+1. Challenge Title (keep it concise)
+2. Detailed Description of what the user needs to implement
+3. Example Input/Output if applicable
+4. Hints (2-3 helpful hints)
+5. Expected Solution Approach
+
+Format your response as a JSON object with these exact keys: title, description, examples, hints, approach"
+`;
+
+exports[`AIPromptService Snapshot Tests should match snapshot for different difficulty levels 1`] = `
+{
+  "easy": "Create a coding challenge with the following specifications:
+- Difficulty Level: easy
+- Topic: general programming
+- Programming Language: JavaScript
+
+Please provide:
+1. Challenge Title (keep it concise)
+2. Detailed Description of what the user needs to implement
+3. Example Input/Output if applicable
+4. Hints (2-3 helpful hints)
+5. Expected Solution Approach
+
+Format your response as a JSON object with these exact keys: title, description, examples, hints, approach",
+  "hard": "Create a coding challenge with the following specifications:
+- Difficulty Level: hard
+- Topic: general programming
+- Programming Language: JavaScript
+
+Please provide:
+1. Challenge Title (keep it concise)
+2. Detailed Description of what the user needs to implement
+3. Example Input/Output if applicable
+4. Hints (2-3 helpful hints)
+5. Expected Solution Approach
+
+Format your response as a JSON object with these exact keys: title, description, examples, hints, approach",
+  "medium": "Create a coding challenge with the following specifications:
+- Difficulty Level: medium
+- Topic: general programming
+- Programming Language: JavaScript
+
+Please provide:
+1. Challenge Title (keep it concise)
+2. Detailed Description of what the user needs to implement
+3. Example Input/Output if applicable
+4. Hints (2-3 helpful hints)
+5. Expected Solution Approach
+
+Format your response as a JSON object with these exact keys: title, description, examples, hints, approach",
+}
+`;
+
+exports[`AIPromptService Snapshot Tests should match snapshot for feedback prompt 1`] = `
+"Please provide constructive feedback on the following submission for a fibonacci implementation:
+
+\`\`\`
+function fibonacci(n) {
+  if (n <= 1) return n;
+  return fibonacci(n - 1) + fibonacci(n - 2);
+}
+\`\`\`
+
+Provide feedback in the following structure:
+1. Strengths: What the student did well
+2. Areas for Improvement: Specific areas that need work
+3. Suggestions: Concrete suggestions for improvement
+4. Resources: Links or references for learning
+5. Overall Assessment: A brief summary
+
+Be encouraging and constructive."
+`;

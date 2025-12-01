@@ -18,6 +18,14 @@ afterEach(async () => {
 });
 
 afterAll(async () => {
+  // Clear all models to prevent "module is already linked" errors
+  Object.keys(mongoose.models).forEach((modelName) => {
+    delete mongoose.models[modelName];
+  });
+  Object.keys(mongoose.modelSchemas).forEach((schemaName) => {
+    delete mongoose.modelSchemas[schemaName];
+  });
+
   await mongoose.connection.close();
   if (mongoServer) {
     await mongoServer.stop();
