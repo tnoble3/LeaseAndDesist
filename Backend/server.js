@@ -56,7 +56,7 @@ const connectToDatabase = async () => {
   console.log(`✅ MongoDB connected (fallback: ${FALLBACK_URI})`);
 };
 // Start the server after the database is ready
-const PORT = process.env.PORT || 5000;
+const PORT = process.env.PORT || 5050;
 const startServer = async () => {
   try {
     await connectToDatabase();

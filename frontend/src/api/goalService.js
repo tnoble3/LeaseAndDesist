@@ -1,7 +1,7 @@
 import axios from "axios";
 
 const apiClient = axios.create({
-  baseURL: import.meta.env.VITE_API_BASE_URL || "http://localhost:5000/api",
+  baseURL: import.meta.env.VITE_API_BASE_URL || "http://localhost:5050/api",
   headers: {
     "Content-Type": "application/json",
   },
@@ -45,6 +45,11 @@ export const fetchGoalProgress = async (goalId) => {
   return data;
 };
 
+export const generateAiChallenge = async (payload = {}) => {
+  const { data } = await apiClient.post("/ai/generateChallenge", payload);
+  return data;
+};
+
 export const fetchChallenges = async (params = {}) => {
   const { data } = await apiClient.get("/challenges", { params });
   return data;
@@ -57,6 +62,11 @@ export const createChallenge = async (challenge) => {
 
 export const updateChallenge = async (challengeId, updates) => {
   const { data } = await apiClient.patch(`/challenges/${challengeId}`, updates);
+  return data;
+};
+
+export const submitForFeedback = async (payload) => {
+  const { data } = await apiClient.post("/ai/submitForFeedback", payload);
   return data;
 };
 

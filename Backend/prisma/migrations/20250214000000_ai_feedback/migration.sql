@@ -1,0 +1,9 @@
+-- CreateTable
+CREATE TABLE "AiFeedbackRecord" (
+    "id" INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+    "submission_id" TEXT NOT NULL,
+    "prompt" TEXT NOT NULL,
+    "response" TEXT NOT NULL,
+    "created_at" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updated_at" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
