@@ -64,4 +64,14 @@ export const deleteChallenge = async (challengeId) => {
   await apiClient.delete(`/challenges/${challengeId}`);
 };
 
+export const generateChallenge = async (payload) => {
+  const { data } = await apiClient.post("/ai/generateChallenge", payload);
+  return data;
+};
+
+export const submitForFeedback = async (payload) => {
+  const { data } = await apiClient.post("/ai/submitForFeedback", payload);
+  return data;
+};
+
 export default apiClient;

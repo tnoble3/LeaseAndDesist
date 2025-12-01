@@ -6,6 +6,8 @@ import GoalList from "./components/GoalList.jsx";
 import GoalProgress from "./components/GoalProgress.jsx";
 import ChallengeForm from "./components/ChallengeForm.jsx";
 import ChallengeList from "./components/ChallengeList.jsx";
+import AIChallengeButton from "./components/AIChallengeButton.jsx";
+import AIFeedbackForm from "./components/AIFeedbackForm.jsx";
 import Aurora from "./components/Aurora.jsx";
 import leaseAndDesistLogo from "./assets/leaseanddesistlogo.png";
 import {
@@ -20,6 +22,7 @@ import {
   deleteChallenge,
 } from "./api/goalService.js";
 import "./App.css";
+import "./sentry.js"; // optional frontend sentry init (no-op if not configured)
 
 const readStoredUser = () => {
   if (typeof window === "undefined") return null;
@@ -349,6 +352,15 @@ const App = () => {
 
           {activeView === "challenges" && (
             <div className="view-stack">
+              <section className="view-section" style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
+                <div style={{ display: "flex", gap: "0.75rem", alignItems: "center" }}>
+                  <AIChallengeButton onCreated={handleChallengeCreated} />
+                  <p className="muted">Generate challenges using AI or submit your work for feedback below.</p>
+                </div>
+
+                <AIFeedbackForm onSubmitted={() => { /* optional refresh */ }} />
+              </section>
+
               <section className="view-section">
                 <ChallengeForm
                   goals={goals}
@@ -356,8 +368,6 @@ const App = () => {
                   onCreated={handleChallengeCreated}
                   isDisabled={!goals.length}
                 />
-              </section>
-              <section className="view-section">
                 <ChallengeList
                   challenges={challenges}
                   loading={challengeLoading}
