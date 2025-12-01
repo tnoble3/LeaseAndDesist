@@ -1,0 +1,35 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`AI services snapshots keeps challenge output stable without OpenAI 1`] = `
+{
+  "challenge": {
+    "description": "Identify a tiny version of Snapshot Goal you can deliver today. Build it, gather feedback, and decide the next slice.",
+    "title": "Ship the smallest slice of Snapshot Goal",
+  },
+  "prompt": "You are an AI coach that generates concise practice challenges tailored to a user's goal.
+- Goal: "Snapshot Goal"
+- Focus: "Improve activation"
+
+Respond with a compact JSON object:
+{
+  "title": "short challenge title (max 70 chars)",
+  "description": "2-3 sentence plan with an action, a constraint, and an outcome"
+}",
+  "provider": "template",
+}
+`;
+
+exports[`AI services snapshots keeps feedback output stable without OpenAI 1`] = `
+{
+  "feedback": "Thanks for sharing This is my writeup for activation.. Strengths: it is clear and purposeful. To improve, tighten the structure, clarify the desired outcome, and add one concrete example. Next step: pick a small section and revise it with these tweaks, then share again for review.",
+  "prompt": "You are an expert reviewer providing concise, kind feedback.
+- Goal: "Snapshot Goal"
+- Submission summary: "This is my writeup for activation."
+
+Respond as JSON with:
+{
+  "feedback": "2-4 sentences with strengths, specific improvements, and one next step"
+}",
+  "provider": "template",
+}
+`;

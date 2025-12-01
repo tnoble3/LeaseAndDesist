@@ -1,0 +1,17 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model AiFeedbackRecord {
+  id            Int      @id @default(autoincrement())
+  submission_id String
+  prompt        String
+  response      String
+  created_at    DateTime @default(now())
+  updated_at    DateTime @updatedAt
+}

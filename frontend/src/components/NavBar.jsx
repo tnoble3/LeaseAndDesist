@@ -7,10 +7,10 @@ const NavBar = ({ user, activeView, onNavigate, onLogout }) => {
       "Explorer"
     : "Explorer";
 
-  const links = [
-    { id: "home", label: "Home" },
-    { id: "goals", label: "Goals" },
-    { id: "challenges", label: "Challenges" },
+  const squares = [
+    { id: "home", label: "Home Square", active: 31 },
+    { id: "community", label: "Community Square", active: 12 },
+    { id: "events", label: "Event Square"},
   ];
 
   return (
@@ -21,17 +21,20 @@ const NavBar = ({ user, activeView, onNavigate, onLogout }) => {
           alt="Lease and Desist logo"
           className="nav-brand__logo"
         />
-        <strong>Lease And Desist</strong>
+
       </div>
-      <div className="nav-links">
-        {links.map((link) => (
+      <div className="nav-squares">
+        {squares.map((square) => (
           <button
-            key={link.id}
+            key={square.id}
             type="button"
-            className={`nav-link ${activeView === link.id ? "active" : ""}`}
-            onClick={() => onNavigate(link.id)}
+            className={`nav-square ${
+              activeView === square.id ? "active" : ""
+            }`}
+            onClick={() => onNavigate(square.id)}
           >
-            {link.label}
+            <strong>{square.label}</strong>
+            <span className="status presence">{square.active} active</span>
           </button>
         ))}
       </div>

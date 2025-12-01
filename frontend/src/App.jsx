@@ -1,10 +1,13 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
+import * as Sentry from "@sentry/react";
 import AuthGate from "./components/AuthGate.jsx";
 import NavBar from "./components/NavBar.jsx";
 import GoalForm from "./components/GoalForm.jsx";
 import GoalList from "./components/GoalList.jsx";
 import GoalProgress from "./components/GoalProgress.jsx";
 import ChallengeForm from "./components/ChallengeForm.jsx";
+import AiChallengeGenerator from "./components/AiChallengeGenerator.jsx";
+import AiFeedbackForm from "./components/AiFeedbackForm.jsx";
 import ChallengeList from "./components/ChallengeList.jsx";
 import Aurora from "./components/Aurora.jsx";
 import leaseAndDesistLogo from "./assets/leaseanddesistlogo.png";
@@ -213,6 +216,14 @@ const App = () => {
     setAuraPosition({ x, y });
   };
 
+  const handleNavigate = (nextView) => {
+    setActiveView(nextView);
+  };
+
+  const triggerFrontendError = () => {
+    Sentry.captureException(new Error("Sentry frontend test error"));
+  };
+
   const unauthenticatedView = (
     <main className="auth-shell">
       <div className="auth-card">
@@ -240,7 +251,7 @@ const App = () => {
         user={currentUser}
         onLogout={handleLogout}
         activeView={activeView}
-        onNavigate={setActiveView}
+        onNavigate={handleNavigate}
       />
       <main className="app-shell">
         <div className="content">
@@ -267,6 +278,13 @@ const App = () => {
                   <p className="muted">
                   Interact with your community.
                   </p>
+                  <button
+                    type="button"
+                    className="ghost"
+                    onClick={triggerFrontendError}
+                  >
+                    Test Sentry error
+                  </button>
                 </div>
               </section>
 
@@ -296,7 +314,7 @@ const App = () => {
 
                 <article className="card highlight-card">
                   <header>
-                    <p className="eyebrow">Challenges</p>
+                    <p className="eyebrow">Events</p>
                     <h3>In motion</h3>
                   </header>
                   <ul className="mini-list">
@@ -313,7 +331,7 @@ const App = () => {
                         </li>
                       ))
                     ) : (
-                      <p className="muted">Challenges you add will appear here.</p>
+                      <p className="muted">On going events/challenges in your community will appear here.</p>
                     )}
                   </ul>
                 </article>
@@ -321,8 +339,18 @@ const App = () => {
             </>
           )}
 
-          {activeView === "goals" && (
+          {activeView === "community" && (
             <div className="view-stack">
+              <section className="card square-header">
+                <div>
+                  <p className="eyebrow">Community Square</p>
+                  <h2>Community Goals</h2>
+                  <p className="muted">
+                    Set and track community goals to enhance your shared living experience.
+                  </p>
+                </div>
+              </section>
+
               <section className="view-section two-columns">
                 <GoalForm onCreated={handleGoalCreated} />
                 <GoalProgress
@@ -347,15 +375,31 @@ const App = () => {
             </div>
           )}
 
-          {activeView === "challenges" && (
+          {activeView === "events" && (
             <div className="view-stack">
-              <section className="view-section">
+              <section className="card square-header">
+                <div>
+                  <p className="eyebrow">Event Square</p>
+                  <h2>Events & Challenges</h2>
+                  <p className="muted">
+                    Post requests for community events, challenges or activities to engage your neighbors.
+                  </p>
+                </div>
+              </section>
+              <section className="view-section two-columns">
                 <ChallengeForm
                   goals={goals}
                   selectedGoalId={selectedGoalId}
                   onCreated={handleChallengeCreated}
                   isDisabled={!goals.length}
                 />
+                <AiChallengeGenerator
+                  goals={goals}
+                  selectedGoalId={selectedGoalId}
+                />
+              </section>
+              <section className="view-section">
+                <AiFeedbackForm goals={goals} selectedGoalId={selectedGoalId} />
               </section>
               <section className="view-section">
                 <ChallengeList
