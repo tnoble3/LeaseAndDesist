@@ -12,6 +12,7 @@ const buildUserResponse = (user) => ({
   username: user.username,
   email: user.email,
   name: user.name,
+  avatarUrl: user.avatarUrl || "",
 });
 
 router.post("/register", async (req, res) => {
@@ -50,6 +51,7 @@ router.post("/register", async (req, res) => {
       username: normalizedUsername,
       email: normalizedEmail,
       password,
+      avatarUrl: req.body?.avatarUrl?.trim() || "",
     });
     await user.save();
 
@@ -124,6 +126,71 @@ router.get("/profile", auth, async (req, res) => {
     res.json(user);
   } catch (error) {
     res.status(500).json({ message: "Error fetching profile", error: error.message });
+  }
+});
+
+router.patch("/profile", auth, async (req, res) => {
+  try {
+    const { firstName, lastName, username, email, avatarUrl } = req.body || {};
+
+    const user = await User.findById(req.userId);
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    if (typeof firstName !== "undefined") {
+      user.firstName = firstName.toString().trim();
+    }
+    if (typeof lastName !== "undefined") {
+      user.lastName = lastName.toString().trim();
+    }
+
+    if (typeof username !== "undefined") {
+      const normalizedUsername = username.toString().trim().toLowerCase();
+      if (!normalizedUsername) {
+        return res.status(400).json({ message: "Username cannot be empty." });
+      }
+      const existing = await User.findOne({
+        username: normalizedUsername,
+        _id: { $ne: user._id },
+      });
+      if (existing) {
+        return res.status(400).json({ message: "Username already in use." });
+      }
+      user.username = normalizedUsername;
+    }
+
+    if (typeof email !== "undefined") {
+      const normalizedEmail = email?.toString().trim().toLowerCase() || "";
+      if (normalizedEmail.length) {
+        const existingEmail = await User.findOne({
+          email: normalizedEmail,
+          _id: { $ne: user._id },
+        });
+        if (existingEmail) {
+          return res.status(400).json({ message: "Email already in use." });
+        }
+        user.email = normalizedEmail;
+      } else {
+        user.email = undefined;
+      }
+    }
+
+    if (typeof avatarUrl !== "undefined") {
+      user.avatarUrl = avatarUrl?.toString().trim() || "";
+    }
+
+    await user.save();
+
+    res.json({
+      message: "Profile updated",
+      user: buildUserResponse(user),
+    });
+  } catch (error) {
+    res.status(500).json({
+      message: "Error updating profile",
+      error: error.message,
+    });
   }
 });
 

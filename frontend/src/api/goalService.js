@@ -30,6 +30,11 @@ export const loginUser = async (payload) => {
   return data;
 };
 
+export const updateProfile = async (payload) => {
+  const { data } = await apiClient.patch("/users/profile", payload);
+  return data;
+};
+
 export const fetchGoals = async () => {
   const { data } = await apiClient.get("/goals");
   return data;
@@ -40,13 +45,29 @@ export const createGoal = async (goal) => {
   return data;
 };
 
+export const updateGoal = async (goalId, updates) => {
+  const { data } = await apiClient.patch(`/goals/${goalId}`, updates);
+  return data;
+};
+
 export const fetchGoalProgress = async (goalId) => {
   const { data } = await apiClient.get(`/goals/${goalId}/progress`);
   return data;
 };
 
+export const deleteGoal = async (goalId) => {
+  await apiClient.delete(`/goals/${goalId}`);
+};
+
 export const generateAiChallenge = async (payload = {}) => {
   const { data } = await apiClient.post("/ai/generateChallenge", payload);
+  return data;
+};
+
+export const setChallengeRsvp = async (challengeId, status) => {
+  const { data } = await apiClient.patch(`/challenges/${challengeId}/rsvp`, {
+    status,
+  });
   return data;
 };
 

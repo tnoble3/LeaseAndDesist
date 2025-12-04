@@ -19,6 +19,7 @@ const ChallengeForm = ({
     defaultValues: {
       title: "",
       description: "",
+      targetDate: "",
       goalId: selectedGoalId || "none",
     },
   });
@@ -33,9 +34,17 @@ const ChallengeForm = ({
     if (!normalizedGoalId) {
       delete payload.goalId;
     }
+    if (!values.targetDate) {
+      delete payload.targetDate;
+    }
 
     await createChallenge(payload);
-    reset({ title: "", description: "", goalId: values.goalId || "none" });
+    reset({
+      title: "",
+      description: "",
+      targetDate: "",
+      goalId: values.goalId || "none",
+    });
     onCreated?.(normalizedGoalId ?? null);
   };
 
@@ -89,8 +98,17 @@ const ChallengeForm = ({
           />
         </label>
 
+        <label>
+          Event date & time
+          <input
+            type="datetime-local"
+            {...register("targetDate")}
+            disabled={disableForm}
+          />
+        </label>
+
         <button type="submit" disabled={disableForm || isSubmitting}>
-          {isSubmitting ? "Saving..." : "Save challenge"}
+          {isSubmitting ? "Saving..." : "Save event"}
         </button>
       </form>
     </section>

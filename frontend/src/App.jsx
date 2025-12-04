@@ -18,9 +18,11 @@ import {
 import {
   fetchGoals,
   fetchChallenges,
-  fetchGoalProgress,
   updateChallenge,
+  updateGoal,
   deleteChallenge,
+  deleteGoal,
+  setChallengeRsvp,
 } from "./api/goalService.js";
 import "./App.css";
 
@@ -35,6 +37,7 @@ const readStoredUser = () => {
 };
 
 const App = () => {
+  const showSentryTest = import.meta.env.DEV;
   const [tokenVersion, setTokenVersion] = useState(0);
   const [currentUser, setCurrentUser] = useState(() => readStoredUser());
   const [activeView, setActiveView] = useState("home");
@@ -43,14 +46,14 @@ const App = () => {
   const [goalLoading, setGoalLoading] = useState(true);
   const [goalError, setGoalError] = useState("");
   const [selectedGoalId, setSelectedGoalId] = useState("");
-  const [goalProgress, setGoalProgress] = useState(null);
-  const [progressLoading, setProgressLoading] = useState(false);
-  const [progressError, setProgressError] = useState("");
+  const [completionSelection, setCompletionSelection] = useState([]);
 
   const [challenges, setChallenges] = useState([]);
+  const [challengeFilter, setChallengeFilter] = useState("all");
   const [challengeLoading, setChallengeLoading] = useState(false);
   const [challengeError, setChallengeError] = useState("");
   const [recentChallenges, setRecentChallenges] = useState([]);
+  const [rsvpMap, setRsvpMap] = useState({});
 
   const [auraPosition, setAuraPosition] = useState({ x: 50, y: 50 });
 
@@ -58,6 +61,14 @@ const App = () => {
     if (typeof window === "undefined") return false;
     return Boolean(window.localStorage.getItem("demo_jwt"));
   }, [tokenVersion]);
+
+  const goalProgress = useMemo(() => {
+    const total = goals.length;
+    const completed = goals.filter((goal) => goal.status === "completed").length;
+    const percentage = total ? Math.round((completed / total) * 100) : 0;
+
+    return { total, completed, percentage };
+  }, [goals]);
 
   const displayName = useMemo(() => {
     if (!currentUser) return "";
@@ -67,6 +78,18 @@ const App = () => {
       .trim();
     return combined || currentUser.username || "";
   }, [currentUser]);
+
+  const timeGreeting = useMemo(() => {
+    const hour = new Date().getHours();
+    if (hour < 12) return "Good morning";
+    if (hour < 18) return "Good afternoon";
+    return "Good evening";
+  }, []);
+
+  const greetingLine = useMemo(
+    () => `${timeGreeting}${displayName ? ', ' : ''}`,
+    [timeGreeting]
+  );
 
   const loadGoals = useCallback(async () => {
     if (!hasToken) {
@@ -98,13 +121,30 @@ const App = () => {
         setChallenges([]);
         return;
       }
-      const targetGoalId =
-        typeof goalId === "undefined" ? selectedGoalId : goalId;
+      let targetGoalId =
+        typeof goalId === "undefined"
+          ? challengeFilter === "all"
+            ? null
+            : challengeFilter
+          : goalId;
+
+      if (targetGoalId === "all") {
+        targetGoalId = null;
+      }
 
       setChallengeLoading(true);
       try {
         const params = targetGoalId ? { goalId: targetGoalId } : {};
         const data = await fetchChallenges(params);
+
+        const nextRsvps = {};
+        data.forEach((item) => {
+          if (item.userRsvp) {
+            nextRsvps[item._id] = item.userRsvp;
+          }
+        });
+        setRsvpMap((prev) => ({ ...prev, ...nextRsvps }));
+
         setChallenges(data);
         setChallengeError("");
       } catch (error) {
@@ -115,34 +155,7 @@ const App = () => {
         setChallengeLoading(false);
       }
     },
-    [hasToken, selectedGoalId]
-  );
-
-  const loadProgress = useCallback(
-    async (goalId) => {
-      if (!hasToken) {
-        setGoalProgress(null);
-        return;
-      }
-      const targetGoalId = goalId || selectedGoalId;
-      if (!targetGoalId) {
-        setGoalProgress(null);
-        return;
-      }
-      setProgressLoading(true);
-      try {
-        const data = await fetchGoalProgress(targetGoalId);
-        setGoalProgress(data);
-        setProgressError("");
-      } catch (error) {
-        const message =
-          error?.response?.data?.message || "Unable to load progress.";
-        setProgressError(message);
-      } finally {
-        setProgressLoading(false);
-      }
-    },
-    [hasToken, selectedGoalId]
+    [hasToken, selectedGoalId, challengeFilter]
   );
 
   const loadRecentChallenges = useCallback(async () => {
@@ -152,6 +165,13 @@ const App = () => {
     }
     try {
       const data = await fetchChallenges({ limit: 4 });
+      const nextRsvps = {};
+      data.forEach((item) => {
+        if (item.userRsvp) {
+          nextRsvps[item._id] = item.userRsvp;
+        }
+      });
+      setRsvpMap((prev) => ({ ...prev, ...nextRsvps }));
       setRecentChallenges(data);
     } catch {
       setRecentChallenges([]);
@@ -165,8 +185,7 @@ const App = () => {
 
   useEffect(() => {
     loadChallenges();
-    loadProgress();
-  }, [loadChallenges, loadProgress, tokenVersion]);
+  }, [loadChallenges, tokenVersion]);
 
   const handleAuthenticated = () => {
     setCurrentUser(readStoredUser());
@@ -183,6 +202,9 @@ const App = () => {
     setChallenges([]);
     setRecentChallenges([]);
     setSelectedGoalId("");
+    setCompletionSelection([]);
+    setChallengeFilter("all");
+    setRsvpMap({});
     setActiveView("home");
   };
 
@@ -190,11 +212,18 @@ const App = () => {
     await loadGoals();
   };
 
+  const handleGoalDeleted = async (goalId) => {
+    await deleteGoal(goalId);
+    setSelectedGoalId((prev) => (prev === goalId ? "" : prev));
+    setChallengeFilter((prev) => (prev === goalId ? "all" : prev));
+    setCompletionSelection((prev) => prev.filter((id) => id !== goalId));
+    setChallenges([]);
+    await loadGoals();
+    await loadRecentChallenges();
+  };
+
   const handleChallengeCreated = async (goalId) => {
     await loadChallenges(goalId);
-    if (goalId) {
-      await loadProgress(goalId);
-    }
     await loadRecentChallenges();
   };
 
@@ -205,11 +234,56 @@ const App = () => {
       await updateChallenge(challenge._id, { status });
     }
     await loadChallenges(challenge.goal);
-    if (challenge.goal) {
-      await loadProgress(challenge.goal);
-    }
     await loadRecentChallenges();
   };
+
+  const handleRsvp = async (challengeId, status) => {
+    const { rsvpCounts } = await setChallengeRsvp(challengeId, status);
+
+    setRsvpMap((prev) => {
+      const next = { ...prev };
+      if (status === "none") {
+        delete next[challengeId];
+      } else {
+        next[challengeId] = status;
+      }
+      return next;
+    });
+
+    const applyCounts = (listUpdater) =>
+      listUpdater((prev) =>
+        prev.map((item) =>
+          item._id === challengeId
+            ? {
+                ...item,
+                userRsvp: status === "none" ? null : status,
+                rsvpCounts: rsvpCounts ?? item.rsvpCounts,
+              }
+            : item
+        )
+      );
+
+    if (rsvpCounts) {
+      applyCounts(setChallenges);
+      applyCounts(setRecentChallenges);
+    } else {
+      setChallenges((prev) =>
+        prev.map((item) =>
+          item._id === challengeId ? { ...item, userRsvp: status } : item
+        )
+      );
+      setRecentChallenges((prev) =>
+        prev.map((item) =>
+          item._id === challengeId ? { ...item, userRsvp: status } : item
+        )
+      );
+    }
+  };
+
+  const upcomingEvents = useMemo(
+    () => recentChallenges.filter((challenge) => challenge.status !== "done"),
+    [recentChallenges]
+  );
 
   const handleAuraMove = (event) => {
     const bounds = event.currentTarget.getBoundingClientRect();
@@ -220,6 +294,34 @@ const App = () => {
 
   const handleNavigate = (nextView) => {
     setActiveView(nextView);
+  };
+
+  const handleChallengeFilterChange = (nextValue) => {
+    setChallengeFilter(nextValue);
+    const goalId = nextValue === "all" ? null : nextValue;
+    loadChallenges(goalId);
+  };
+
+  const toggleGoalCompletionSelection = (goalId) => {
+    setCompletionSelection((prev) =>
+      prev.includes(goalId)
+        ? prev.filter((id) => id !== goalId)
+        : [...prev, goalId]
+    );
+  };
+
+  const markSelectedGoalsComplete = async () => {
+    if (!completionSelection.length) return;
+    await Promise.all(
+      completionSelection.map((goalId) =>
+        updateGoal(goalId, { status: "completed" })
+      )
+    );
+    setCompletionSelection([]);
+    await loadGoals();
+    if (selectedGoalId) {
+      await loadChallenges(selectedGoalId);
+    }
   };
 
   const triggerFrontendError = () => {
@@ -254,6 +356,9 @@ const App = () => {
         onLogout={handleLogout}
         activeView={activeView}
         onNavigate={handleNavigate}
+        onProfileUpdate={(nextUser) => {
+          setCurrentUser(nextUser);
+        }}
       />
       <main className="app-shell">
         <div className="content">
@@ -271,7 +376,17 @@ const App = () => {
                   }}
                 />
                 <div>
-                  <p className="eyebrow">Welcome back</p>
+                  <p
+                    className="eyebrow typewriter"
+                    style={{
+                      "--typewriter-width": `${Math.max(
+                        greetingLine.length + 2,
+                        12
+                      )}ch`,
+                    }}
+                  >
+                    {greetingLine}
+                  </p>
                   <h1>
                     {displayName
                       ? `${displayName}`
@@ -280,13 +395,6 @@ const App = () => {
                   <p className="muted">
                   Interact with your community.
                   </p>
-                  <button
-                    type="button"
-                    className="ghost"
-                    onClick={triggerFrontendError}
-                  >
-                    Test Sentry error
-                  </button>
                 </div>
               </section>
 
@@ -320,18 +428,52 @@ const App = () => {
                     <h3>Upcoming Events</h3>
                   </header>
                   <ul className="mini-list">
-                    {recentChallenges.length ? (
-                      recentChallenges.map((challenge) => (
+                    {upcomingEvents.length ? (
+                      upcomingEvents.map((challenge) => {
+                        const rsvpStatus = rsvpMap[challenge._id] || "none";
+                        const rsvpCounts =
+                          challenge.user === currentUser?.id
+                            ? challenge.rsvpCounts
+                            : undefined;
+                        return (
                         <li key={challenge._id}>
                           <div>
                             <strong>{challenge.title}</strong>
                             {challenge.description && <p>{challenge.description}</p>}
+                            {rsvpCounts && (
+                              <p className="muted">
+                                RSVPs — Going: {rsvpCounts.going || 0} · Maybe:{" "}
+                                {rsvpCounts.maybe || 0} · Not going:{" "}
+                                {rsvpCounts.declined || 0}
+                              </p>
+                            )}
                           </div>
-                          <span className={`status ${challenge.status}`}>
-                            {formatChallengeStatus(challenge.status)}
-                          </span>
+                          <div className="mini-list__actions">
+                            <span className={`status ${challenge.status}`}>
+                              {formatChallengeStatus(challenge.status)}
+                            </span>
+                            <div className="rsvp-group" aria-label="RSVP">
+                              {["going", "maybe", "declined"].map((option) => (
+                                <button
+                                  key={option}
+                                  type="button"
+                                  className={`rsvp-pill ${
+                                    rsvpStatus === option ? "active" : ""
+                                  }`}
+                                  onClick={() => handleRsvp(challenge._id, option)}
+                                >
+                                  {option === "going"
+                                    ? "Going"
+                                    : option === "maybe"
+                                    ? "Maybe"
+                                    : "Not going"}
+                                </button>
+                              ))}
+                            </div>
+                          </div>
                         </li>
-                      ))
+                        );
+                      })
                     ) : (
                       <p className="muted">Upcoming events.</p>
                     )}
@@ -357,9 +499,33 @@ const App = () => {
                 <GoalForm onCreated={handleGoalCreated} />
                 <GoalProgress
                   progress={goalProgress}
-                  loading={progressLoading}
-                  error={progressError}
+                  loading={goalLoading}
+                  error={goalError}
                 />
+              </section>
+              <section className="view-section">
+                <div className="card filter-bar">
+                  <div>
+                    <p className="eyebrow">Completion</p>
+                    <h3>Select goals to mark complete</h3>
+                    <p className="muted">
+                      Choose multiple goals to mark them finished in one click.
+                    </p>
+                  </div>
+                <div className="goal-complete-actions">
+                  <span className="muted small">
+                    Selected: {completionSelection.length}
+                  </span>
+                  <button
+                    type="button"
+                    className="mark-complete-btn"
+                    onClick={markSelectedGoalsComplete}
+                    disabled={!completionSelection.length}
+                  >
+                    Mark completed
+                  </button>
+                  </div>
+                </div>
               </section>
               <section className="view-section">
                 <GoalList
@@ -369,9 +535,13 @@ const App = () => {
                   selectedGoalId={selectedGoalId}
                   onSelect={(id) => {
                     setSelectedGoalId(id);
+                    setChallengeFilter(id);
                     loadChallenges(id);
-                    loadProgress(id);
                   }}
+                  onDelete={handleGoalDeleted}
+                  completionSelection={completionSelection}
+                  onToggleCompletion={toggleGoalCompletionSelection}
+                  currentUserId={currentUser?.id}
                 />
               </section>
             </div>
@@ -403,12 +573,34 @@ const App = () => {
                 <AiFeedbackForm goals={goals} selectedGoalId={selectedGoalId} />
               </section>
               <section className="view-section">
+                <div className="card filter-bar">
+                  <div>
+                    <p className="eyebrow">Filter</p>
+                    <h3>Show events for</h3>
+                  </div>
+                  <select
+                    value={challengeFilter}
+                    onChange={(event) => handleChallengeFilterChange(event.target.value)}
+                  >
+                    <option value="all">All events</option>
+                    {goals.map((goal) => (
+                      <option key={goal._id} value={goal._id}>
+                        {goal.title}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </section>
+              <section className="view-section">
                 <ChallengeList
                   challenges={challenges}
                   loading={challengeLoading}
                   error={challengeError}
                   onStatusChange={handleChallengeStatus}
                   onDelete={(challenge) => handleChallengeStatus(challenge, "delete")}
+                  onRsvp={handleRsvp}
+                  rsvpMap={rsvpMap}
+                  currentUserId={currentUser?.id}
                 />
               </section>
             </div>
@@ -435,6 +627,16 @@ const App = () => {
       )}
       <div className="app-frame__content">
         {hasToken ? authenticatedView : unauthenticatedView}
+        {showSentryTest && (
+          <button
+            type="button"
+            className="sr-only"
+            aria-label="Trigger Sentry frontend test error"
+            onClick={triggerFrontendError}
+          >
+            Test Sentry error
+          </button>
+        )}
       </div>
     </div>
   );
