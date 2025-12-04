@@ -15,10 +15,20 @@ const GoalProgress = ({ progress, loading, error }) => {
     );
   }
 
-  if (!progress || progress.total === 0) {
+  if (!progress || progress.available === 0) {
     return (
       <section className="card">
         <p className="muted">Create a goal to start tracking progress.</p>
+      </section>
+    );
+  }
+
+  if (progress.total === 0) {
+    return (
+      <section className="card">
+        <p className="muted">
+          Select goals you wish to work toward, and your progress will be tracked here.
+        </p>
       </section>
     );
   }
@@ -28,7 +38,7 @@ const GoalProgress = ({ progress, loading, error }) => {
   return (
     <section className="card progress-card">
       <header>
-        <p className="eyebrow">Progress</p>
+        <p className="eyebrow">Your progress</p>
         <h3>{percentage}% complete</h3>
       </header>
       <p className="muted">

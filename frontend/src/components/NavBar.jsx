@@ -97,7 +97,8 @@ const NavBar = ({ user, activeView, onNavigate, onLogout, onProfileUpdate }) => 
   const squares = [
     { id: "home", label: "Dashboard" },
     { id: "community", label: "Town Square", active: 12 },
-    { id: "events", label: "Event Square", active: 12},
+    { id: "events", label: "Event Square", active: 12 },
+    { id: "public-square", label: "Public Square", active: 6 },
   ];
 
   return (
