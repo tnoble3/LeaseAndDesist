@@ -15,30 +15,40 @@ const isValidObjectId = (value) => mongoose.Types.ObjectId.isValid(value);
 
 router.post("/generateChallenge", async (req, res) => {
   try {
-    const { goalId, focus } = req.body || {};
-    const providedFocus = focus?.toString().trim() || "";
-    let subject = providedFocus;
-    let goalTitle = "";
+    const clean = (value) => value?.toString().trim() || "";
 
-    if (goalId) {
-      if (!isValidObjectId(goalId)) {
+    const requestGoalId = clean(req.body?.goalId);
+    const providedFocus = clean(req.body?.focus);
+    const providedOccasion = clean(req.body?.occasion);
+
+    if (providedOccasion.length > 80) {
+      return res.status(400).json({ message: "Occasion is too long." });
+    }
+
+    let goalTitle = "";
+    let goalId = null;
+
+    if (requestGoalId) {
+      if (!isValidObjectId(requestGoalId)) {
         return res.status(400).json({ message: "Invalid goal id." });
       }
 
-      const goal = await Goal.findOne({ _id: goalId, user: req.userId }).lean();
+      const goal = await Goal.findOne({ _id: requestGoalId, user: req.userId }).lean();
       if (!goal) {
         return res.status(404).json({ message: "Goal not found." });
       }
 
       goalTitle = goal.title;
-      if (!subject) {
-        subject = goal.title;
-      }
+      goalId = goal._id;
     }
 
+    const subject = goalTitle || providedFocus || "community connection";
+    const focusForPrompt = providedFocus || goalTitle || subject;
+
     const { challenge, prompt, provider } = await generateChallenge({
-      goalTitle: goalTitle || subject,
-      focus: providedFocus || goalTitle || subject,
+      goalTitle: subject,
+      focus: focusForPrompt,
+      occasion: providedOccasion,
     });
 
     try {
@@ -54,10 +64,14 @@ router.post("/generateChallenge", async (req, res) => {
       console.warn("Unable to persist AI log", error?.message || error);
     }
 
+    const occasionValue = challenge.occasion || providedOccasion || undefined;
+    const responseFocus = providedFocus || goalTitle || undefined;
+
     res.json({
       ...challenge,
       goalId: goalId || null,
-      focus: subject || undefined,
+      focus: responseFocus,
+      occasion: occasionValue,
       provider,
     });
   } catch (error) {

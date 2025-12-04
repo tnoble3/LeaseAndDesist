@@ -7,9 +7,9 @@ const fallbackFormat = (value) => {
 };
 
 const CHALLENGE_STATUS_LABELS = {
-  todo: "To Do",
-  in_progress: "In Progress",
-  done: "Complete",
+  todo: "Upcoming",
+  in_progress: "Ongoing",
+  done: "Completed",
 };
 
 const GOAL_STATUS_LABELS = {

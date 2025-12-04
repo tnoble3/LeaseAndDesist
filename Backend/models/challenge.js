@@ -26,7 +26,8 @@ const challengeSchema = new mongoose.Schema(
     goal: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Goal",
-      required: true,
+      required: false,
+      default: null,
     },
     user: {
       type: mongoose.Schema.Types.ObjectId,

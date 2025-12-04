@@ -2,6 +2,7 @@ import express from "express";
 import mongoose from "mongoose";
 import Goal from "../models/goal.js";
 import Challenge from "../models/challenge.js";
+import Rsvp from "../models/rsvp.js";
 import { auth } from "../middleware/auth.js";
 
 const router = express.Router();
@@ -54,7 +55,7 @@ router.post("/", async (req, res) => {
 
 router.get("/", async (req, res) => {
   try {
-    const goals = await Goal.find({ user: req.userId })
+    const goals = await Goal.find({})
       .sort({ createdAt: -1 })
       .lean();
     res.json(goals);
@@ -74,7 +75,7 @@ router.get("/:goalId", async (req, res) => {
   }
 
   try {
-    const goal = await Goal.findOne({ _id: goalId, user: req.userId }).lean();
+    const goal = await Goal.findById(goalId).lean();
 
     if (!goal) {
       return res.status(404).json({ message: "Goal not found." });
@@ -82,7 +83,7 @@ router.get("/:goalId", async (req, res) => {
 
     return res.json({
       ...goal,
-      challengeStats: await calculateProgress(goalId, req.userId),
+      challengeStats: await calculateProgress(goalId, goal.user),
     });
   } catch (error) {
     res.status(500).json({
@@ -125,9 +126,15 @@ router.patch("/:goalId", async (req, res) => {
   }
 
   try {
-    const goal = await Goal.findOne({ _id: goalId, user: req.userId });
+    const goal = await Goal.findById(goalId);
     if (!goal) {
       return res.status(404).json({ message: "Goal not found." });
+    }
+
+    const isOwner = goal.user?.toString() === req.userId;
+    const isStatusOnlyUpdate = Object.keys(updates).length === 1 && updates.status;
+    if (!isOwner && !isStatusOnlyUpdate) {
+      return res.status(403).json({ message: "Only the creator can edit this goal." });
     }
 
     Object.assign(goal, updates);
@@ -159,9 +166,15 @@ router.delete("/:goalId", async (req, res) => {
       return res.status(404).json({ message: "Goal not found." });
     }
 
+    const goalChallenges = await Challenge.find({ goal: goalId, user: req.userId }).select(
+      "_id"
+    );
+    const challengeIds = goalChallenges.map((c) => c._id);
+
     await Promise.all([
       goal.deleteOne(),
       Challenge.deleteMany({ goal: goalId, user: req.userId }),
+      Rsvp.deleteMany({ challenge: { $in: challengeIds } }),
     ]);
 
     res.status(204).send();
@@ -179,13 +192,13 @@ router.get("/:goalId/progress", async (req, res) => {
     return res.status(400).json({ message: "Invalid goal id." });
   }
 
-  const goal = await Goal.findOne({ _id: goalId, user: req.userId });
+  const goal = await Goal.findById(goalId);
   if (!goal) {
     return res.status(404).json({ message: "Goal not found." });
   }
 
   try {
-    const progress = await calculateProgress(goalId, req.userId);
+    const progress = await calculateProgress(goalId, goal.user);
     res.json(progress);
   } catch (error) {
     res.status(500).json({
