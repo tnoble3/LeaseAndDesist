@@ -98,15 +98,13 @@ const App = () => {
         setChallenges([]);
         return;
       }
-      const targetGoalId = goalId || selectedGoalId;
-      if (!targetGoalId) {
-        setChallenges([]);
-        setChallengeError("Select a goal to load challenges.");
-        return;
-      }
+      const targetGoalId =
+        typeof goalId === "undefined" ? selectedGoalId : goalId;
+
       setChallengeLoading(true);
       try {
-        const data = await fetchChallenges({ goalId: targetGoalId });
+        const params = targetGoalId ? { goalId: targetGoalId } : {};
+        const data = await fetchChallenges(params);
         setChallenges(data);
         setChallengeError("");
       } catch (error) {
@@ -194,7 +192,9 @@ const App = () => {
 
   const handleChallengeCreated = async (goalId) => {
     await loadChallenges(goalId);
-    await loadProgress(goalId);
+    if (goalId) {
+      await loadProgress(goalId);
+    }
     await loadRecentChallenges();
   };
 
@@ -205,7 +205,9 @@ const App = () => {
       await updateChallenge(challenge._id, { status });
     }
     await loadChallenges(challenge.goal);
-    await loadProgress(challenge.goal);
+    if (challenge.goal) {
+      await loadProgress(challenge.goal);
+    }
     await loadRecentChallenges();
   };
 
@@ -291,8 +293,8 @@ const App = () => {
               <section className="highlights-grid">
                 <article className="card highlight-card">
                   <header>
-                    <p className="eyebrow">Goals</p>
-                    <h3>Latest</h3>
+                    <p className="eyebrow">Community Goals</p>
+                    <h3>Latest Goals</h3>
                   </header>
                   <ul className="mini-list">
                     {goals.slice(0, 3).map((goal) => (
@@ -314,8 +316,8 @@ const App = () => {
 
                 <article className="card highlight-card">
                   <header>
-                    <p className="eyebrow">Events</p>
-                    <h3>In motion</h3>
+                    <p className="eyebrow">Community Events</p>
+                    <h3>Upcoming Events</h3>
                   </header>
                   <ul className="mini-list">
                     {recentChallenges.length ? (
@@ -331,7 +333,7 @@ const App = () => {
                         </li>
                       ))
                     ) : (
-                      <p className="muted">On going events/challenges in your community will appear here.</p>
+                      <p className="muted">Upcoming events.</p>
                     )}
                   </ul>
                 </article>
@@ -391,7 +393,6 @@ const App = () => {
                   goals={goals}
                   selectedGoalId={selectedGoalId}
                   onCreated={handleChallengeCreated}
-                  isDisabled={!goals.length}
                 />
                 <AiChallengeGenerator
                   goals={goals}

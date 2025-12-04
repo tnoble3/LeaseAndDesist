@@ -31,7 +31,12 @@ const allowedStatus = ["todo", "in_progress", "done"];
 
 router.post("/", async (req, res) => {
   try {
-    const { title, description, targetDate, status, goalId } = req.body;
+    const { title, description, targetDate, status } = req.body;
+    const incomingGoalId = req.body.goalId;
+    const goalId =
+      incomingGoalId && incomingGoalId !== "none"
+        ? incomingGoalId
+        : null;
 
     if (!title || title.trim().length === 0) {
       return res.status(400).json({ message: "Title is required." });
@@ -41,18 +46,16 @@ router.post("/", async (req, res) => {
       return res.status(400).json({ message: "Invalid status value." });
     }
 
-    if (!goalId) {
-      return res.status(400).json({ message: "goalId is required." });
+    if (goalId) {
+      await ensureGoalOwnership(goalId, req.userId);
     }
-
-    await ensureGoalOwnership(goalId, req.userId);
 
     const challenge = await Challenge.create({
       title: title.trim(),
       description: description?.trim() || "",
       targetDate: targetDate ? new Date(targetDate) : undefined,
       status,
-      goal: goalId,
+      goal: goalId || undefined,
       user: req.userId,
     });
 
@@ -68,12 +71,13 @@ router.post("/", async (req, res) => {
 router.get("/", async (req, res) => {
   const { goalId, status, limit } = req.query;
   const filter = { user: req.userId };
+  const normalizedGoalId = goalId && goalId !== "none" ? goalId : null;
 
-  if (goalId) {
-    if (!isValidObjectId(goalId)) {
+  if (normalizedGoalId) {
+    if (!isValidObjectId(normalizedGoalId)) {
       return res.status(400).json({ message: "Invalid goal id." });
     }
-    filter.goal = goalId;
+    filter.goal = normalizedGoalId;
   }
 
   if (status) {

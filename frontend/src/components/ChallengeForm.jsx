@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { createChallenge } from "../api/goalService.js";
 
@@ -12,45 +13,60 @@ const ChallengeForm = ({
     register,
     handleSubmit,
     reset,
+    setValue,
     formState: { errors, isSubmitting },
   } = useForm({
     defaultValues: {
       title: "",
       description: "",
-      goalId: selectedGoalId || "",
+      goalId: selectedGoalId || "none",
     },
   });
 
   const onSubmit = async (values) => {
-    await createChallenge(values);
-    reset({ title: "", description: "", goalId: values.goalId });
-    onCreated?.(values.goalId);
+    const normalizedGoalId =
+      values.goalId && values.goalId !== "none" ? values.goalId : undefined;
+    const payload = {
+      ...values,
+      goalId: normalizedGoalId,
+    };
+    if (!normalizedGoalId) {
+      delete payload.goalId;
+    }
+
+    await createChallenge(payload);
+    reset({ title: "", description: "", goalId: values.goalId || "none" });
+    onCreated?.(normalizedGoalId ?? null);
   };
 
-  const disableForm = isDisabled || !goals.length;
+  useEffect(() => {
+    if (!showGoalSelect) return;
+    setValue("goalId", selectedGoalId || "none");
+  }, [selectedGoalId, setValue, showGoalSelect]);
+
+  const disableForm = isDisabled;
 
   return (
     <section className="card form-card">
-      <h3>Add a challenge</h3>
+      <h3>Create An Event</h3>
       <form className="goal-form" onSubmit={handleSubmit(onSubmit)}>
         {showGoalSelect && (
           <label>
-            Goal<span className="required">*</span>
+            Goal
             <select
-              {...register("goalId", { required: "Select a goal" })}
+              {...register("goalId")}
               disabled={disableForm}
-              defaultValue={selectedGoalId || ""}
+              defaultValue={selectedGoalId || "none"}
             >
-              <option value="">Select</option>
+              <option value="none">No goal (independent event)</option>
+              {goals.length > 0 && <option value="">Select a goal</option>}
               {goals.map((goal) => (
                 <option key={goal._id} value={goal._id}>
                   {goal.title}
                 </option>
               ))}
             </select>
-            {errors.goalId && (
-              <span className="error">{errors.goalId.message}</span>
-            )}
+            {errors.goalId && <span className="error">{errors.goalId.message}</span>}
           </label>
         )}
 

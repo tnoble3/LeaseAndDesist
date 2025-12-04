@@ -8,9 +8,9 @@ const NavBar = ({ user, activeView, onNavigate, onLogout }) => {
     : "Explorer";
 
   const squares = [
-    { id: "home", label: "Home Square", active: 31 },
-    { id: "community", label: "Community Square", active: 12 },
-    { id: "events", label: "Event Square"},
+    { id: "home", label: "Dashboard" },
+    { id: "community", label: "Town Square", active: 12 },
+    { id: "events", label: "Event Square", active: 12},
   ];
 
   return (
@@ -34,14 +34,16 @@ const NavBar = ({ user, activeView, onNavigate, onLogout }) => {
             onClick={() => onNavigate(square.id)}
           >
             <strong>{square.label}</strong>
-            <span className="status presence">{square.active} active</span>
+            {typeof square.active !== "undefined" && (
+              <span className="status presence">{square.active} active</span>
+            )}
           </button>
         ))}
       </div>
       <div className="nav-user">
         <span>{displayName}</span>
         <button type="button" className="ghost" onClick={onLogout}>
-          Log out
+          Logout
         </button>
       </div>
     </nav>

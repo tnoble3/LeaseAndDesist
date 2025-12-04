@@ -10,7 +10,7 @@ const ChallengeList = ({
   if (loading) {
     return (
       <section className="card">
-        <p className="muted">Loading challenges…</p>
+        <p className="muted">Loading events...</p>
       </section>
     );
   }
@@ -26,7 +26,7 @@ const ChallengeList = ({
   if (!challenges.length) {
     return (
       <section className="card">
-        <p className="muted">No challenges yet.</p>
+        <p className="muted">No events yet.</p>
       </section>
     );
   }
