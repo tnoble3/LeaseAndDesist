@@ -10,6 +10,7 @@ import AiChallengeGenerator from "./components/AiChallengeGenerator.jsx";
 import AiFeedbackForm from "./components/AiFeedbackForm.jsx";
 import ChallengeList from "./components/ChallengeList.jsx";
 import Aurora from "./components/Aurora.jsx";
+import PublicSquare from "./components/PublicSquare.jsx";
 import leaseAndDesistLogo from "./assets/leaseanddesistlogo.png";
 import {
   formatChallengeStatus,
@@ -19,7 +20,6 @@ import {
   fetchGoals,
   fetchChallenges,
   updateChallenge,
-  updateGoal,
   deleteChallenge,
   deleteGoal,
   setChallengeRsvp,
@@ -36,6 +36,19 @@ const readStoredUser = () => {
   }
 };
 
+const storageKeyForUserGoals = (userId) =>
+  `goal_state_${userId || "guest"}`;
+
+const readUserGoalState = (userId) => {
+  if (typeof window === "undefined") return {};
+  try {
+    const raw = window.localStorage.getItem(storageKeyForUserGoals(userId));
+    return raw ? JSON.parse(raw) : {};
+  } catch {
+    return {};
+  }
+};
+
 const App = () => {
   const showSentryTest = import.meta.env.DEV;
   const [tokenVersion, setTokenVersion] = useState(0);
@@ -46,7 +59,6 @@ const App = () => {
   const [goalLoading, setGoalLoading] = useState(true);
   const [goalError, setGoalError] = useState("");
   const [selectedGoalId, setSelectedGoalId] = useState("");
-  const [completionSelection, setCompletionSelection] = useState([]);
 
   const [challenges, setChallenges] = useState([]);
   const [challengeFilter, setChallengeFilter] = useState("all");
@@ -56,19 +68,37 @@ const App = () => {
   const [rsvpMap, setRsvpMap] = useState({});
 
   const [auraPosition, setAuraPosition] = useState({ x: 50, y: 50 });
+  const [userGoalState, setUserGoalState] = useState(() => {
+    const user = readStoredUser();
+    return readUserGoalState(user?.id || user?._id || "guest");
+  });
 
   const hasToken = useMemo(() => {
     if (typeof window === "undefined") return false;
     return Boolean(window.localStorage.getItem("demo_jwt"));
   }, [tokenVersion]);
 
+  const userKey = useMemo(
+    () => currentUser?.id || currentUser?._id || "guest",
+    [currentUser]
+  );
+
+  useEffect(() => {
+    setUserGoalState(readUserGoalState(userKey));
+  }, [userKey]);
+
   const goalProgress = useMemo(() => {
-    const total = goals.length;
-    const completed = goals.filter((goal) => goal.status === "completed").length;
+    const picked = goals.filter(
+      (goal) => userGoalState[goal._id]?.pickedUp
+    );
+    const total = picked.length;
+    const completed = picked.filter(
+      (goal) => userGoalState[goal._id]?.completed
+    ).length;
     const percentage = total ? Math.round((completed / total) * 100) : 0;
 
-    return { total, completed, percentage };
-  }, [goals]);
+    return { total, completed, percentage, available: goals.length };
+  }, [goals, userGoalState]);
 
   const displayName = useMemo(() => {
     if (!currentUser) return "";
@@ -95,6 +125,7 @@ const App = () => {
     if (!hasToken) {
       setGoals([]);
       setGoalLoading(false);
+      setUserGoalState({});
       return;
     }
 
@@ -188,8 +219,12 @@ const App = () => {
   }, [loadChallenges, tokenVersion]);
 
   const handleAuthenticated = () => {
-    setCurrentUser(readStoredUser());
+    const nextUser = readStoredUser();
+    setCurrentUser(nextUser);
     setTokenVersion((prev) => prev + 1);
+    setUserGoalState(
+      readUserGoalState(nextUser?.id || nextUser?._id || "guest")
+    );
     setActiveView("home");
   };
 
@@ -202,9 +237,9 @@ const App = () => {
     setChallenges([]);
     setRecentChallenges([]);
     setSelectedGoalId("");
-    setCompletionSelection([]);
     setChallengeFilter("all");
     setRsvpMap({});
+    setUserGoalState(readUserGoalState("guest"));
     setActiveView("home");
   };
 
@@ -216,8 +251,19 @@ const App = () => {
     await deleteGoal(goalId);
     setSelectedGoalId((prev) => (prev === goalId ? "" : prev));
     setChallengeFilter((prev) => (prev === goalId ? "all" : prev));
-    setCompletionSelection((prev) => prev.filter((id) => id !== goalId));
     setChallenges([]);
+    setUserGoalState((prev) => {
+      if (!prev[goalId]) return prev;
+      const next = { ...prev };
+      delete next[goalId];
+      if (typeof window !== "undefined") {
+        window.localStorage.setItem(
+          storageKeyForUserGoals(userKey),
+          JSON.stringify(next)
+        );
+      }
+      return next;
+    });
     await loadGoals();
     await loadRecentChallenges();
   };
@@ -302,26 +348,49 @@ const App = () => {
     loadChallenges(goalId);
   };
 
-  const toggleGoalCompletionSelection = (goalId) => {
-    setCompletionSelection((prev) =>
-      prev.includes(goalId)
-        ? prev.filter((id) => id !== goalId)
-        : [...prev, goalId]
-    );
+  const persistUserGoalState = useCallback(
+    (updater) => {
+      setUserGoalState((prev) => {
+        const nextState =
+          typeof updater === "function" ? updater(prev) : updater;
+        if (typeof window !== "undefined") {
+          window.localStorage.setItem(
+            storageKeyForUserGoals(userKey),
+            JSON.stringify(nextState)
+          );
+        }
+        return nextState;
+      });
+    },
+    [userKey]
+  );
+
+  const handleTogglePickUp = (goalId) => {
+    persistUserGoalState((prev) => {
+      const current = prev[goalId] || { pickedUp: false, completed: false };
+      const pickedUp = !current.pickedUp;
+      const completed = pickedUp ? current.completed : false;
+      const next = { ...prev, [goalId]: { pickedUp, completed } };
+      if (!pickedUp && !completed) {
+        const { [goalId]: _, ...rest } = next;
+        return rest;
+      }
+      return next;
+    });
   };
 
-  const markSelectedGoalsComplete = async () => {
-    if (!completionSelection.length) return;
-    await Promise.all(
-      completionSelection.map((goalId) =>
-        updateGoal(goalId, { status: "completed" })
-      )
-    );
-    setCompletionSelection([]);
-    await loadGoals();
-    if (selectedGoalId) {
-      await loadChallenges(selectedGoalId);
-    }
+  const handleToggleCompletion = (goalId) => {
+    persistUserGoalState((prev) => {
+      const current = prev[goalId] || { pickedUp: false, completed: false };
+      if (!current.pickedUp) {
+        return prev;
+      }
+      const next = {
+        ...prev,
+        [goalId]: { pickedUp: true, completed: !current.completed },
+      };
+      return next;
+    });
   };
 
   const triggerFrontendError = () => {
@@ -506,24 +575,20 @@ const App = () => {
               <section className="view-section">
                 <div className="card filter-bar">
                   <div>
-                    <p className="eyebrow">Completion</p>
-                    <h3>Select goals to mark complete</h3>
-                    <p className="muted">
-                      Choose multiple goals to mark them finished in one click.
-                    </p>
+                    <p className="eyebrow">Your participation</p>
+                    <h3>Select the goals you wish to work toward</h3>
+            
                   </div>
-                <div className="goal-complete-actions">
-                  <span className="muted small">
-                    Selected: {completionSelection.length}
-                  </span>
-                  <button
-                    type="button"
-                    className="mark-complete-btn"
-                    onClick={markSelectedGoalsComplete}
-                    disabled={!completionSelection.length}
-                  >
-                    Mark completed
-                  </button>
+                  <div className="pill-row">
+                    <span className="pill pill--info">
+                      Selected: {goalProgress.total}
+                    </span>
+                    <span className="pill pill--success">
+                      Completed: {goalProgress.completed}
+                    </span>
+                    <span className="pill pill--ghost">
+                      Available: {goalProgress.available}
+                    </span>
                   </div>
                 </div>
               </section>
@@ -539,9 +604,10 @@ const App = () => {
                     loadChallenges(id);
                   }}
                   onDelete={handleGoalDeleted}
-                  completionSelection={completionSelection}
-                  onToggleCompletion={toggleGoalCompletionSelection}
-                  currentUserId={currentUser?.id}
+                  currentUserId={currentUser?.id || currentUser?._id}
+                  userGoalState={userGoalState}
+                  onTogglePickUp={handleTogglePickUp}
+                  onToggleComplete={handleToggleCompletion}
                 />
               </section>
             </div>
@@ -604,6 +670,10 @@ const App = () => {
                 />
               </section>
             </div>
+          )}
+
+          {activeView === "public-square" && (
+            <PublicSquare currentUserName={displayName || "You"} />
           )}
         </div>
       </main>
