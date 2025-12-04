@@ -1,3 +1,5 @@
+import nodeFetch from "node-fetch";
+
 const promptTemplate = `
 You are an AI community event planner that suggests one actionable event neighbors can host together.
 
@@ -10,7 +12,7 @@ Guidelines:
 - Suggest one community event neighbors attend together within a day or weekend (block party, open mic, potluck, courtyard fair, cleanup, workshop).
 - Include what happens, who participates, where it happens, materials needed, and the community impact. Keep costs low.
 - If an occasion is provided, theme the event around it; otherwise keep it season-neutral.
-- Do NOT suggest personal practice plans, 30-day challenges, journaling, or solo tasks—only shared events that people host or attend.
+- Do not suggest personal practice plans, 30-day challenges, journaling, or solo tasks—only shared events that people host or attend.
 - Keep titles short and avoid words like "challenge" or "task" in the title.
 - Respond with a JSON object only:
 {
@@ -103,48 +105,48 @@ const buildFallbackEvent = (subject, occasion) => {
   return fallbackTemplates[index](topic, occasionLabel);
 };
 
-const callOpenAI = async (prompt) => {
-  const apiKey = process.env.OPENAI_API_KEY;
+const resolveFetch = () => (typeof fetch === "function" ? fetch : nodeFetch);
+
+const callGemini = async (prompt) => {
+  const apiKey = process.env.GEMINI_API_KEY;
   if (!apiKey) {
-    return null;
+    throw new Error("GEMINI_API_KEY is not set");
   }
 
-  if (typeof fetch !== "function") {
-    return null;
+  const fetchFn = resolveFetch();
+  if (typeof fetchFn !== "function") {
+    throw new Error("Fetch is not available in this runtime");
   }
 
-  const model = process.env.OPENAI_MODEL || "gpt-4o-mini";
+  const model = process.env.GEMINI_MODEL || "gemini-1.5-flash";
+  const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
 
-  const response = await fetch("https://api.openai.com/v1/chat/completions", {
+  const response = await fetchFn(endpoint, {
     method: "POST",
     headers: {
-      Authorization: `Bearer ${apiKey}`,
       "Content-Type": "application/json",
     },
     body: JSON.stringify({
-      model,
-      messages: [
-        {
-          role: "system",
-          content:
-            "You design concise community events that neighbors can run together within a day. Only suggest events people attend or host (block party, potluck, cleanup, open mic). Do NOT suggest personal or multi-day challenges, training plans, journaling, or habit trackers. Keep titles short and avoid the words 'challenge' or 'task'.",
-        },
-        { role: "user", content: prompt },
-      ],
-      temperature: 0.7,
-      response_format: { type: "json_object" },
+      contents: [{ role: "user", parts: [{ text: prompt }] }],
+      generationConfig: {
+        temperature: 0.7,
+        responseMimeType: "application/json",
+      },
     }),
   });
 
   if (!response.ok) {
     const errText = await response.text();
-    throw new Error(`OpenAI request failed: ${response.status} ${errText}`);
+    throw new Error(`Gemini request failed: ${response.status} ${errText}`);
   }
 
   const payload = await response.json();
-  const content = payload?.choices?.[0]?.message?.content;
+  const content =
+    payload?.candidates?.[0]?.content?.parts?.[0]?.text ||
+    payload?.candidates?.[0]?.content?.parts?.[0]?.inlineData?.data;
+
   if (!content) {
-    throw new Error("OpenAI response missing content");
+    throw new Error("Gemini response missing content");
   }
 
   const parsed = JSON.parse(content);
@@ -196,24 +198,30 @@ export const generateChallenge = async ({ goalTitle, focus, occasion }) => {
   const occasionLabel = formatOccasion(occasion);
 
   try {
-    const openAiResult = await callOpenAI(prompt);
-    if (openAiResult?.title && openAiResult?.description) {
-      const cleaned = sanitizeEvent(openAiResult);
+    const geminiResult = await callGemini(prompt);
+    if (geminiResult?.title && geminiResult?.description) {
+      const cleaned = sanitizeEvent(geminiResult);
       const eventSafe = ensureCommunityEvent(cleaned, goalTitle || focus, occasion);
+      const challenge = occasionLabel
+        ? { ...eventSafe, occasion: occasionLabel }
+        : { ...eventSafe };
       return {
         prompt,
-        provider: "openai",
-        challenge: { ...eventSafe, occasion: occasionLabel || undefined },
+        provider: "gemini",
+        challenge,
       };
     }
   } catch (error) {
-    console.warn("OpenAI generation failed, using fallback", error?.message || error);
+    console.warn("Gemini generation failed, using fallback", error?.message || error);
   }
 
   const fallback = buildFallbackEvent(goalTitle || focus, occasion);
+  const challenge = occasionLabel
+    ? { ...fallback, occasion: occasionLabel }
+    : { ...fallback };
   return {
     prompt,
-    provider: process.env.OPENAI_API_KEY ? "openai:fallback" : "template",
-    challenge: { ...fallback, occasion: occasionLabel || undefined },
+    provider: process.env.GEMINI_API_KEY ? "gemini:fallback" : "template",
+    challenge,
   };
 };

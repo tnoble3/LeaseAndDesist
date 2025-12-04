@@ -54,12 +54,13 @@ const App = () => {
   const [tokenVersion, setTokenVersion] = useState(0);
   const [currentUser, setCurrentUser] = useState(() => readStoredUser());
   const [activeView, setActiveView] = useState("home");
-
+  //This is the state management for the goals
   const [goals, setGoals] = useState([]);
   const [goalLoading, setGoalLoading] = useState(true);
   const [goalError, setGoalError] = useState("");
   const [selectedGoalId, setSelectedGoalId] = useState("");
-
+  /*this is the state management for the events (it is named challenges as 
+  challenges were previously used to meet rubric requirements) */
   const [challenges, setChallenges] = useState([]);
   const [challengeFilter, setChallengeFilter] = useState("all");
   const [challengeLoading, setChallengeLoading] = useState(false);
@@ -72,7 +73,7 @@ const App = () => {
     const user = readStoredUser();
     return readUserGoalState(user?.id || user?._id || "guest");
   });
-
+  //This is the check for whether the user is authenticated based on the presence of a token in local storage.
   const hasToken = useMemo(() => {
     if (typeof window === "undefined") return false;
     return Boolean(window.localStorage.getItem("demo_jwt"));
@@ -217,7 +218,7 @@ const App = () => {
   useEffect(() => {
     loadChallenges();
   }, [loadChallenges, tokenVersion]);
-
+//This function handles the user authentication process by reading the stored user data and updating the application state accordingly.
   const handleAuthenticated = () => {
     const nextUser = readStoredUser();
     setCurrentUser(nextUser);
@@ -227,7 +228,7 @@ const App = () => {
     );
     setActiveView("home");
   };
-
+//resets the appstate upon user logout and clears local storage of user data.
   const handleLogout = () => {
     window.localStorage.removeItem("demo_jwt");
     window.localStorage.removeItem("demo_user");
@@ -347,7 +348,7 @@ const App = () => {
     const goalId = nextValue === "all" ? null : nextValue;
     loadChallenges(goalId);
   };
-
+//This is the function that persists user goal state to local storage in order to determine which goals the user has picked up and completed.
   const persistUserGoalState = useCallback(
     (updater) => {
       setUserGoalState((prev) => {
@@ -408,7 +409,8 @@ const App = () => {
           />
           <div className="auth-visual__copy">
             <h1>Welcome to Lease and Desist</h1>
-            <p className="muted">Your space, your people, your voice.</p>
+            <p className="muted">A digital town square made for tenants, by tenants.
+            </p>
           </div>
         </div>
         <div className="auth-panel-wrapper">

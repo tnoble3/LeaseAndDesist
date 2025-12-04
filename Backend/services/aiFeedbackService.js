@@ -1,3 +1,5 @@
+import nodeFetch from "node-fetch";
+
 const feedbackPromptTemplate = `
 You are an expert reviewer providing concise, kind feedback.
 - Goal: "{goalTitle}"
@@ -20,43 +22,43 @@ const buildFeedbackPrompt = ({ goalTitle, summary }) => {
     .replace("{summary}", synopsis);
 };
 
-const callOpenAI = async (prompt) => {
-  const apiKey = process.env.OPENAI_API_KEY;
+const resolveFetch = () => (typeof fetch === "function" ? fetch : nodeFetch);
+
+const callGemini = async (prompt) => {
+  const apiKey = process.env.GEMINI_API_KEY;
   if (!apiKey) return null;
-  if (typeof fetch !== "function") return null;
 
-  const model = process.env.OPENAI_MODEL || "gpt-4o-mini";
+  const fetchFn = resolveFetch();
+  if (typeof fetchFn !== "function") return null;
 
-  const response = await fetch("https://api.openai.com/v1/chat/completions", {
+  const model = process.env.GEMINI_MODEL || "gemini-1.5-flash";
+  const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
+
+  const response = await fetchFn(endpoint, {
     method: "POST",
     headers: {
-      Authorization: `Bearer ${apiKey}`,
       "Content-Type": "application/json",
     },
     body: JSON.stringify({
-      model,
-      messages: [
-        {
-          role: "system",
-          content:
-            "You are a supportive reviewer. Keep feedback concise, actionable, and kind.",
-        },
-        { role: "user", content: prompt },
-      ],
-      temperature: 0.55,
-      response_format: { type: "json_object" },
+      contents: [{ role: "user", parts: [{ text: prompt }] }],
+      generationConfig: {
+        temperature: 0.55,
+        responseMimeType: "application/json",
+      },
     }),
   });
 
   if (!response.ok) {
     const errText = await response.text();
-    throw new Error(`OpenAI feedback failed: ${response.status} ${errText}`);
+    throw new Error(`Gemini feedback failed: ${response.status} ${errText}`);
   }
 
   const payload = await response.json();
-  const content = payload?.choices?.[0]?.message?.content;
+  const content =
+    payload?.candidates?.[0]?.content?.parts?.[0]?.text ||
+    payload?.candidates?.[0]?.content?.parts?.[0]?.inlineData?.data;
   if (!content) {
-    throw new Error("OpenAI feedback missing content");
+    throw new Error("Gemini feedback missing content");
   }
 
   return JSON.parse(content);
@@ -73,18 +75,18 @@ export const generateFeedback = async ({ goalTitle, summary }) => {
   const prompt = buildFeedbackPrompt({ goalTitle, summary });
 
   try {
-    const result = await callOpenAI(prompt);
+    const result = await callGemini(prompt);
     if (result?.feedback) {
-      return { prompt, provider: "openai", feedback: result.feedback };
+      return { prompt, provider: "gemini", feedback: result.feedback };
     }
   } catch (error) {
-    console.warn("OpenAI feedback failed, using fallback", error?.message || error);
+    console.warn("Gemini feedback failed, using fallback", error?.message || error);
   }
 
   const fallback = fallbackFeedback(summary);
   return {
     prompt,
-    provider: process.env.OPENAI_API_KEY ? "openai:fallback" : "template",
+    provider: process.env.GEMINI_API_KEY ? "gemini:fallback" : "template",
     feedback: fallback.feedback,
   };
 };

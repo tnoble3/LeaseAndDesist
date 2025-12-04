@@ -12,7 +12,7 @@ describe("aiChallengeService", () => {
   });
 
   it("falls back to template output when no API key is present", async () => {
-    process.env.OPENAI_API_KEY = "";
+    process.env.GEMINI_API_KEY = "";
     const { challenge, provider, prompt } = await generateChallenge({
       goalTitle: "Launch the app",
     });

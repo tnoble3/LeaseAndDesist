@@ -10,7 +10,7 @@
    npm install
    npm run start
    ```
-   If you want AI-generated challenges, add `OPENAI_API_KEY` (and optionally `OPENAI_MODEL`) to `Backend/.env`.
+   If you want AI-generated challenges/feedback, add `GEMINI_API_KEY` (and optionally `GEMINI_MODEL`, defaults to `gemini-1.5-flash`) to `Backend/.env`.
 
 The server now waits for a successful Mongo connection before it listens. When the configured `MONGO_URI` host cannot be resolved (for example, when you run the backend outside Docker), it automatically retries using `mongodb://127.0.0.1:27017/<db>` so you can keep using the same `.env`.
 
@@ -60,3 +60,5 @@ The Cypress workflow relies on the protected endpoints, so make sure `JWT_SECRET
 | `MONGO_HOST` / `MONGO_PORT` / `MONGO_DB` | Pieces used to build the default fallback (`127.0.0.1`, `27017`, `leaseanddesist`). |
 | `JWT_SECRET` | Secret used to sign JWTs. |
 | `PORT` | Express listening port (defaults to `5000`). |
+| `GEMINI_API_KEY` | API key for Google Generative Language (Gemini) used by AI challenge/feedback services. |
+| `GEMINI_MODEL` | Optional Gemini model name (defaults to `gemini-1.5-flash`). |
