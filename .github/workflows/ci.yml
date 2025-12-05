@@ -1,76 +1,53 @@
 name: CI
 
 on:
-  push:
-    branches: [ main ]
   pull_request:
-    branches: [ main ]
+  push:
+    branches:
+      - main
+      - TrinitySprint2
 
 jobs:
-  e2e:
+  build:
     runs-on: ubuntu-latest
     services:
       mongo:
-        image: mongo:6
-        ports: ['27017:27017']
+        image: mongo:6.0
+        ports:
+          - 27017:27017
         options: >-
-          --health-cmd "mongosh --eval 'db.adminCommand({ping:1})'" \
-          --health-interval 10s --health-timeout 5s --health-retries 5
-
+          --health-cmd "mongosh --quiet --eval 'db.runCommand({ ping: 1 })'"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    env:
+      MONGO_URI: mongodb://127.0.0.1:27017/leaseanddesist
+      JWT_SECRET: github-actions-secret
+      PORT: 5050
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-      - name: Use Node.js
+      - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '18'
+          node-version: 22
 
       - name: Install backend dependencies
-        run: |
-          cd Backend
-          npm ci
+        run: npm ci
+        working-directory: Backend
 
-      - name: Install client dependencies
-        run: |
-          cd client
-          npm ci
+      - name: Install frontend dependencies
+        run: npm ci
+        working-directory: frontend
 
-      - name: Start backend
-        env:
-          MONGO_URI: mongodb://localhost:27017/leaseanddesist
-          JWT_SECRET: testsecret
-          PORT: 5000
-        run: |
-          cd Backend
-          # start server in background
-          nohup npm start > backend.log 2>&1 &
+      - name: Run backend unit tests
+        run: npm test
+        working-directory: Backend
 
-      - name: Build client
-        run: |
-          cd client
-          npm run build
+      - name: Build frontend
+        run: npm run build
+        working-directory: frontend
 
-      - name: Serve built client
-        run: |
-          cd client
-          # serve the static build on port 3000
-          npx http-server ./dist -p 3000 > client.log 2>&1 &
-
-      - name: Wait for app
-        run: |
-          npx wait-on http://localhost:3000
-
-      - name: Run Cypress tests
-        run: |
-          cd client
-          npx cypress run --config baseUrl=http://localhost:3000
-
-      - name: Upload Cypress artifacts
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: cypress-artifacts
-          path: |
-            client/cypress/videos
-            client/cypress/screenshots
+      - name: Cypress smoke test
+        run: npm run cy:run
+        working-directory: Backend

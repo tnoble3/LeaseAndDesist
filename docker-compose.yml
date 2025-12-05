@@ -12,7 +12,7 @@ services:
     build: ./Backend
     container_name: leaseanddesist-backend
     ports:
-      - "5000:5000"
+      - "5050:5050"
     env_file:
       - .env.docker
     depends_on:
