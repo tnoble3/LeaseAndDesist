@@ -34,6 +34,20 @@ const challengeSchema = new mongoose.Schema(
       ref: "User",
       required: true,
     },
+    // AI-generated challenge tracking
+    isAiGenerated: {
+      type: Boolean,
+      default: false,
+    },
+    aiProvider: {
+      type: String,
+      default: "",
+      enum: ["", "openai", "openai:fallback", "template"],
+    },
+    aiLogId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "AiLog",
+    },
   },
   {
     timestamps: true,

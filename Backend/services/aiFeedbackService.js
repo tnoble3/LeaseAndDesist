@@ -11,7 +11,7 @@ Respond as JSON with:
 
 const safeText = (value, fallback = "") => value?.toString().trim() || fallback;
 
-const buildFeedbackPrompt = ({ goalTitle, summary }) => {
+export const buildFeedbackPrompt = ({ goalTitle, summary }) => {
   const goal = safeText(goalTitle, "a personal goal");
   const synopsis = safeText(summary, "A short submission was provided.");
 
