@@ -26,10 +26,14 @@ app.get("/", (req, res) => {
 import userRoutes from "./routes/userRoutes.js";
 import listingRoutes from "./routes/listingRoutes.js";
 import messageRoutes from "./routes/messageRoutes.js";
+import goalRoutes from "./routes/goalRoutes.js";
+import challengeRoutes from "./routes/challengeRoutes.js";
 
 app.use("/api/users", userRoutes);
 app.use("/api/listings", listingRoutes);
 app.use("/api/messages", messageRoutes);
+app.use("/api/goals", goalRoutes);
+app.use("/api/challenges", challengeRoutes);
 
 // Start the server
 const PORT = process.env.PORT || 5000;

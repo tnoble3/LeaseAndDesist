@@ -9,14 +9,22 @@ services:
       - mongo_data:/data/db
 
   backend:
-    build: ./backend
+    build: ./Backend
     container_name: leaseanddesist-backend
     ports:
       - "5000:5000"
     env_file:
-      - .env
+      - .env.docker
     depends_on:
       - mongo
+
+  client:
+    build: ./client
+    container_name: leaseanddesist-client
+    ports:
+      - "3000:80"
+    depends_on:
+      - backend
 
 volumes:
   mongo_data:
